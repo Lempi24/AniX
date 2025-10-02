@@ -14,7 +14,8 @@ import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/solid';
 
 export const ImageCarousel = ({ slides }) => {
 	return (
-		<div className='relative w-full max-w-xl mx-auto'>
+		<div className='relative w-full max-w-xl lg:max-w-5xl mx-auto'>
+			{/* max-w-2/3 */}
 			<Swiper
 				modules={[Navigation, Pagination, A11y, Autoplay]}
 				spaceBetween={50}
@@ -29,21 +30,20 @@ export const ImageCarousel = ({ slides }) => {
 					el: '.swiper-pagination-custom',
 					clickable: true,
 				}}
-				// autoplay={{ delay: 10000, disableOnInteraction: false }}
-				className='aspect-[4/3]'
+				autoplay={{ delay: 5000, disableOnInteraction: false }}
 			>
 				{slides.map((slide, index) => (
 					<SwiperSlide key={index} className='relative text-text'>
 						<img
 							src={slide.src}
 							alt={slide.title}
-							className='block w-full h-full object-cover rounded-2xl'
+							className='block w-full h-full object-cover rounded-2xl aspect-[4/3] lg:aspect-[16/9]'
 						/>
 						<div
 							className='absolute bottom-0 left-0 w-full p-4 rounded-b-2xl bg-gradient-to-t from-black/80 via-black/60 to-transparent
 '
 						>
-							<h2 className='text-lg font-bold'>{slide.title}</h2>
+							<h2 className='text-3xl font-bold'>{slide.title}</h2>
 							<p className='text-sm mt-1'>{slide.description}</p>
 							<button
 								onClick={slide.buttonAction}
@@ -55,7 +55,6 @@ export const ImageCarousel = ({ slides }) => {
 					</SwiperSlide>
 				))}
 			</Swiper>
-
 			<div className='swiper-button-prev-custom absolute top-1/2 -translate-y-1/2 left-4 z-10 cursor-pointer hidden md:block'>
 				<ChevronLeftIcon className='w-10 h-10 text-cta bg-black/30 rounded-full p-1' />
 			</div>

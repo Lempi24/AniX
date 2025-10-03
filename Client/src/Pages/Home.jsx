@@ -3,6 +3,7 @@ import Navigation from '../Components/Navigation';
 import AnimeCardSection from '../Components/AnimeCardSection';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 const slides = [
 	{
 		src: 'https://cdn.myanimelist.net/images/anime/1000/110531l.jpg',
@@ -19,6 +20,7 @@ const slides = [
 	},
 ];
 const Home = () => {
+	const navigate = useNavigate();
 	const [popularAnime, setPopularAnime] = useState([]);
 	const [recentAnime, setRecentAnime] = useState([]);
 	const [recomendedAnime, setRecommendedAnime] = useState([]);
@@ -42,15 +44,29 @@ const Home = () => {
 	useEffect(() => {
 		fetchAllData();
 	}, []);
-	console.log(popularAnime);
+	const handleAnimeClick = (animeObject) => {
+		navigate('/anime', { state: { animeData: animeObject } });
+	};
 	return (
 		<div>
 			<Navigation />
 			<main className='space-y-5 lg:flex lg:flex-col lg:items-center lg:justify-center'>
 				<ImageCarousel slides={slides} />
-				<AnimeCardSection h2='Popularne teraz' animeList={popularAnime} />
-				<AnimeCardSection h2='Ostatnio dodane' animeList={recentAnime} />
-				<AnimeCardSection h2='Dla początkujących' animeList={recomendedAnime} />
+				<AnimeCardSection
+					h2='Popularne teraz'
+					animeList={popularAnime}
+					onAnimeClick={handleAnimeClick}
+				/>
+				<AnimeCardSection
+					h2='Ostatnio dodane'
+					animeList={recentAnime}
+					onAnimeClick={handleAnimeClick}
+				/>
+				<AnimeCardSection
+					h2='Dla początkujących'
+					animeList={recomendedAnime}
+					onAnimeClick={handleAnimeClick}
+				/>
 			</main>
 		</div>
 	);

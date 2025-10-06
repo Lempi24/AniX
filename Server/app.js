@@ -54,6 +54,23 @@ app.get('/anime/recommended', async (req, res) => {
 		res.status(500).json({ error: 'Internal Server Error' });
 	}
 });
+app.get('/anime/:id', async (req, res) => {
+	try {
+		const { id } = req.params;
+		const query = 'SELECT * FROM anime WHERE mal_id = $1';
+		const result = await pool.query(query, [id]);
+
+		if (result.rows.length === 0) {
+			return res
+				.status(404)
+				.json({ error: 'Nie zaleziono anime o podanym ID.' });
+		}
+		res.json(result.rows[0]);
+	} catch (error) {
+		console.error('Błąd podczas pobierania danych anime:', error);
+		res.status(500).json({ error: 'Wystąpił błąd serwera.' });
+	}
+});
 app.listen(PORT, () => {
 	console.log(`Server is running on port ${PORT}`);
 });

@@ -5,6 +5,7 @@ const AnimeCard = ({ title, imageUrl, episodes }) => {
 	return (
 		<div className='relative rounded-xl overflow-hidden w-[200px] h-[350px] lg:w-[250px] lg:h-[400px] shrink-0 cursor-pointer group'>
 			<img src={imageUrl} alt={title} className='object-cover w-full h-full' />
+
 			<div
 				className='absolute inset-x-0 bottom-0 h-1/3 bg-main/70
                     transition-all duration-500 ease-in-out 

@@ -45,7 +45,9 @@ const Home = () => {
 		fetchAllData();
 	}, []);
 	const handleAnimeClick = (animeObject) => {
-		navigate('/anime', { state: { animeData: animeObject } });
+		navigate(`/anime/${animeObject.mal_id}`, {
+			state: { animeData: animeObject },
+		});
 	};
 	return (
 		<div>

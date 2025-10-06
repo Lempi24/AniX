@@ -1,13 +1,18 @@
-import { useLocation, Link } from 'react-router-dom';
+import { useLocation, Link, useParams, useNavigate } from 'react-router-dom';
 import Navigation from '../Components/Navigation';
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
+import axios from 'axios';
 const Anime = () => {
 	const location = useLocation();
+	const navigate = useNavigate();
 	const starIcon =
 		'M341.5 45.1C337.4 37.1 329.1 32 320.1 32C311.1 32 302.8 37.1 298.7 45.1L225.1 189.3L65.2 214.7C56.3 216.1 48.9 222.4 46.1 231C43.3 239.6 45.6 249 51.9 255.4L166.3 369.9L141.1 529.8C139.7 538.7 143.4 547.7 150.7 553C158 558.3 167.6 559.1 175.7 555L320.1 481.6L464.4 555C472.4 559.1 482.1 558.3 489.4 553C496.7 547.7 500.4 538.8 499 529.8L473.7 369.9L588.1 255.4C594.5 249 596.7 239.6 593.9 231C591.1 222.4 583.8 216.1 574.8 214.7L415 189.3L341.5 45.1z';
 	const closeIcon =
 		'M183.1 137.4C170.6 124.9 150.3 124.9 137.8 137.4C125.3 149.9 125.3 170.2 137.8 182.7L275.2 320L137.9 457.4C125.4 469.9 125.4 490.2 137.9 502.7C150.4 515.2 170.7 515.2 183.2 502.7L320.5 365.3L457.9 502.6C470.4 515.1 490.7 515.1 503.2 502.6C515.7 490.1 515.7 469.8 503.2 457.3L365.8 320L503.1 182.6C515.6 170.1 515.6 149.8 503.1 137.3C490.6 124.8 470.3 124.8 457.8 137.3L320.5 274.7L183.1 137.4z';
-	const animeData = location.state?.animeData;
+	const playIcon =
+		'M187.2 100.9C174.8 94.1 159.8 94.4 147.6 101.6C135.4 108.8 128 121.9 128 136L128 504C128 518.1 135.5 531.2 147.6 538.4C159.7 545.6 174.8 545.9 187.2 539.1L523.2 355.1C536 348.1 544 334.6 544 320C544 305.4 536 291.9 523.2 284.9L187.2 100.9z';
+	const [animeData, setAnimeData] = useState(location.state?.animeData || null);
+	const { animeId } = useParams();
 	const seasonsTranslate = {
 		summer: 'Lato',
 		winter: 'Zima',
@@ -30,6 +35,21 @@ const Anime = () => {
 		'Currently Airing': 'Emitowane',
 	};
 	const [isTrailerOpen, setIsTrailerOpen] = useState(false);
+	useEffect(() => {
+		if (!animeData) {
+			const fetchAnimeData = async () => {
+				try {
+					const response = await axios.get(
+						`http://localhost:3001/anime/${animeId}`
+					);
+					setAnimeData(response.data);
+				} catch (err) {
+					console.error('Error fetching anime:', err);
+				}
+			};
+			fetchAnimeData();
+		}
+	}, [animeId, animeData]);
 	if (!animeData) {
 		return (
 			<div>
@@ -41,18 +61,39 @@ const Anime = () => {
 			</div>
 		);
 	}
-	console.log(animeData);
+	const handleEpisodeClick = (episodeNumber) => {
+		navigate(`/watch/${animeData.mal_id}/${episodeNumber}`, {
+			state: { animeData, episodeNumber },
+		});
+	};
 	return (
 		<div className='pb-10'>
 			<Navigation />
 			<div className='relative flex flex-col items-center gap-10 mt-10 max-w-7xl mx-auto px-4'>
 				<div className='flex flex-col lg:flex-row w-full items-center lg:items-start gap-5 lg:gap-10'>
-					<img
-						onClick={() => setIsTrailerOpen(true)}
-						src={animeData.image_url}
-						alt={animeData.title}
-						className='w-[250px] shrink-0 rounded-md border-2 border-cta shadow-[0_8px_30px_rgba(0,0,0,0.5)] cursor-pointer'
-					/>
+					<div className='relative w-[250px] shrink-0'>
+						<img
+							onClick={() => setIsTrailerOpen(true)}
+							src={animeData.image_url}
+							alt={animeData.title}
+							className='shrink-0 rounded-md border-2 border-cta shadow-[0_8px_30px_rgba(0,0,0,0.5)] cursor-pointer'
+						/>
+						<div className='absolute top-0 flex items-center justify-center bg-main/60 w-full h-full'>
+							<button
+								onClick={() => setIsTrailerOpen(true)}
+								className='p-3 border-2 border-cta rounded-full cursor-pointer'
+							>
+								<svg
+									xmlns='http://www.w3.org/2000/svg'
+									viewBox='0 0 640 640'
+									className='fill-cta w-[25px]'
+								>
+									<path d={playIcon} />
+								</svg>
+							</button>
+						</div>
+					</div>
+
 					<div className='flex flex-col gap-5 w-full'>
 						<div className='text-center lg:text-left space-y-2'>
 							<h1 className='font-bold text-3xl lg:text-4xl'>
@@ -137,8 +178,9 @@ const Anime = () => {
 										(_, i) => i + 1
 									).map((episodeNumber) => (
 										<button
+											onClick={() => handleEpisodeClick(episodeNumber)}
 											key={episodeNumber}
-											className='border-2 border-cta rounded-lg aspect-square flex items-center justify-center text-cta'
+											className='border-2 border-cta rounded-lg aspect-square flex items-center justify-center text-cta cursor-pointer'
 										>
 											{episodeNumber}
 										</button>

@@ -1,4 +1,4 @@
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, NavLink } from 'react-router-dom';
 const Navigation = () => {
 	const navigate = useNavigate();
 	const burgerMenuIcon =
@@ -18,10 +18,24 @@ const Navigation = () => {
 			/>
 			<ul className='hidden  lg:flex items-center gap-8'>
 				<li>
-					<Link to='/'>Strona główna</Link>
+					<NavLink
+						to='/'
+						className={({ isActive }) => {
+							return isActive ? 'border-b-2 border-cta pb-1' : '';
+						}}
+					>
+						Strona główna
+					</NavLink>
 				</li>
 				<li>
-					<Link to='/anime'>Anime</Link>
+					<NavLink
+						to='/anime'
+						className={({ isActive }) => {
+							return isActive ? 'border-b-2 border-cta pb-1' : '';
+						}}
+					>
+						Anime
+					</NavLink>
 				</li>
 				<li>
 					<a>Logowanie</a>

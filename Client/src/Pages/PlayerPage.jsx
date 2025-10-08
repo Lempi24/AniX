@@ -1,43 +1,66 @@
 import Navigation from '../Components/Navigation';
-import { Link, useLocation, useParams } from 'react-router-dom';
+import { Link, useLocation, useParams, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 const PlayerPage = () => {
 	const location = useLocation();
+	const navigate = useNavigate();
 	const [animeData, setAnimeData] = useState(location.state?.animeData || null);
-	const { animeId, episode } = useParams();
-	console.log(useParams());
-	const [fetchedEpisodeNumber, setFetchedEpisodeNumber] = useState(
-		location.state?.episodeNumber || null
-	);
+	const { animeId, episodeNumber } = useParams();
 	const [selectedPlayerUrl, setSelectedPlayerUrl] = useState(null);
-	const episodeData = {
-		player_urls: {
-			cda: 'http://ebd.cda.pl/800x450/2555521271',
-			streamtape: 'link2',
-			vudeo: 'link3',
-		},
+	const [currentEpisode, setCurrentEpisode] = useState(null);
+	const [animeEpisodesData, setAnimeEpisodesData] = useState(
+		location.state?.animeData || null
+	);
+	const handleEpisodeChange = (newEpisodeNumber) => {
+		setSelectedPlayerUrl(null);
+		navigate(`/watch/${animeId}/${newEpisodeNumber}`);
 	};
+
 	const statusTranslate = {
 		'Finished Airing': 'Zakończony',
 		'Currently Airing': 'Emitowane',
 	};
 	useEffect(() => {
-		if (!animeData) {
-			const fetchAnimeData = async () => {
+		const fetchAnimeDetails = async () => {
+			if (!animeData) {
 				try {
 					const response = await axios.get(
 						`http://localhost:3001/anime/${animeId}`
 					);
 					setAnimeData(response.data);
-					setFetchedEpisodeNumber(episode);
 				} catch (err) {
-					console.error('Error fetching anime:', err);
+					console.error('Error fetching anime details:', err);
 				}
-			};
-			fetchAnimeData();
+			}
+		};
+
+		const fetchEpisodesList = async () => {
+			try {
+				const response = await axios.get(
+					`http://localhost:3001/anime/${animeId}/episodes`
+				);
+				setAnimeEpisodesData(response.data);
+			} catch (err) {
+				console.error('Error fetching episodes list:', err);
+			}
+		};
+
+		const fetchAllData = async () => {
+			await Promise.all([fetchAnimeDetails(), fetchEpisodesList()]);
+		};
+
+		fetchAllData();
+	}, [animeId]);
+	useEffect(() => {
+		if (animeEpisodesData && animeEpisodesData.length > 0) {
+			const foundEpisode = animeEpisodesData.find(
+				(ep) => ep.episode_number == episodeNumber
+			);
+			setCurrentEpisode(foundEpisode);
 		}
-	}, [animeId, animeData]);
+	}, [episodeNumber, animeEpisodesData]);
+	console.log('Obecny odcinek:', currentEpisode);
 	if (!animeData) {
 		return (
 			<div>
@@ -49,7 +72,7 @@ const PlayerPage = () => {
 			</div>
 		);
 	}
-	console.log(animeData);
+	console.log(animeEpisodesData);
 	return (
 		<div className=''>
 			<Navigation />
@@ -66,7 +89,7 @@ const PlayerPage = () => {
 					</Link>
 				</li>
 				<li>{'>'}</li>
-				<li>Odcinek {fetchedEpisodeNumber}</li>
+				<li>Odcinek {episodeNumber}</li>
 			</ul>
 			<main className='relative flex flex-col lg:flex-row-reverse  items-center gap-10 mt-10 max-w-7xl mx-auto px-4'>
 				<div className='flex flex-col gap-5 w-full lg:w-1/3 lg:mb-auto'>
@@ -90,42 +113,45 @@ const PlayerPage = () => {
 						<p className='border-b-2 border-cta text-xl pb-3'>Lista odcinków</p>
 						<div className='flex flex-col mt-3 max-h-[300px] overflow-auto gap-2'>
 							{Array.from({ length: animeData.episodes }, (_, i) => i + 1).map(
-								(episodeNumber) => (
-									<div
+								(epNum) => (
+									<button
+										key={epNum}
+										onClick={() => handleEpisodeChange(epNum)}
 										className={`${
-											episodeNumber === fetchedEpisodeNumber ? 'bg-cta' : ''
-										} border-2 border-cta rounded-md p-2`}
+											epNum == episodeNumber ? 'bg-cta' : ''
+										} border-2 border-cta rounded-md p-2 cursor-pointer`}
 									>
 										<p
 											className={`${
-												episodeNumber === fetchedEpisodeNumber
-													? 'text-main'
-													: 'text-cta'
+												epNum == episodeNumber ? 'text-main' : 'text-cta'
 											}`}
 										>
-											Odcinek {episodeNumber}
+											Odcinek {epNum}
 										</p>
-									</div>
+									</button>
 								)
 							)}
 						</div>
 					</div>
 				</div>
 				<div className='flex flex-col gap-5 w-full lg:w-2/3'>
+					<p className='font-bold text-2xl'>
+						Odcinek {episodeNumber}
+						{': '}
+						{currentEpisode?.title}
+					</p>
+
 					<div className='relative border-2 border-cta rounded-md overflow-hidden bg-black flex items-center justify-center'>
-						{/* Kontener na player, który utrzyma proporcje 16:9 */}
 						<div className='aspect-video w-full'>
 							{selectedPlayerUrl ? (
-								// Jeśli użytkownik wybrał player (selectedPlayerUrl nie jest null)
 								<iframe
-									className='w-full h-full' // Wypełnia cały kontener aspect-video
+									className='w-full h-full'
 									src={selectedPlayerUrl}
 									title='Odtwarzacz wideo odcinka anime'
 									allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share'
 									allowFullScreen
 								></iframe>
 							) : (
-								// Jeśli żaden player nie został wybrany, pokazujemy placeholder
 								<div className='w-full h-full flex items-center text-center justify-center text-cta text-xl font-semibold'>
 									Wybierz player aby rozpocząć odtwarzanie
 								</div>
@@ -135,60 +161,31 @@ const PlayerPage = () => {
 					<div className='border-2 border-cta rounded-md p-5 w-full mb-5'>
 						<p className='border-b-2 border-cta text-xl pb-3'>Wybierz player</p>
 						<div className='grid grid-cols-[repeat(auto-fill,minmax(120px,1fr))] gap-3 mt-4 '>
-							{/* Przykład dla playera CDA */}
-							{episodeData.player_urls?.cda && (
-								<button
-									onClick={() =>
-										handlePlayerSelect(episodeData.player_urls.cda)
-									}
-									className={`flex flex-col items-center justify-center p-3 border-2 border-cta rounded-lg transition-colors cursor-pointer
+							{currentEpisode && currentEpisode.player_urls ? (
+								Object.entries(currentEpisode.player_urls).map(
+									([playerName, playerUrl]) => (
+										<button
+											key={playerName}
+											onClick={() => setSelectedPlayerUrl(playerUrl)}
+											className={`flex flex-col items-center justify-center p-3 border-2 border-cta rounded-lg transition-colors cursor-pointer
                     ${
-											selectedPlayerUrl === episodeData.player_urls.cda
+											selectedPlayerUrl === playerUrl
 												? 'bg-cta text-black font-bold'
 												: 'hover:bg-cta/20'
 										}`}
-								>
-									<span className='text-lg'>CDA</span>
-									<span className='text-xs opacity-70'>720p • SUB</span>
-								</button>
-							)}
-
-							{/* Przykład dla playera Streamtape */}
-							{episodeData.player_urls?.streamtape && (
-								<button
-									onClick={() =>
-										handlePlayerSelect(episodeData.player_urls.streamtape)
-									}
-									className={`flex flex-col items-center justify-center p-3 border-2 border-cta rounded-lg transition-colors cursor-pointer
-                    ${
-											selectedPlayerUrl === episodeData.player_urls.streamtape
-												? 'bg-cta text-black font-bold'
-												: 'hover:bg-cta/20'
-										}`}
-								>
-									<span className='text-lg'>Streamtape</span>
-									<span className='text-xs opacity-70'>1080p • SUB</span>
-								</button>
-							)}
-
-							{/* Przykład dla playera Vudeo */}
-							{episodeData.player_urls?.vudeo && (
-								<button
-									onClick={() =>
-										handlePlayerSelect(episodeData.player_urls.vudeo)
-									}
-									className={`flex flex-col items-center justify-center p-3 border-2 border-cta rounded-lg transition-colors cursor-pointer
-                    ${
-											selectedPlayerUrl === episodeData.player_urls.vudeo
-												? 'bg-cta text-black font-bold'
-												: 'hover:bg-cta/20'
-										}`}
-								>
-									<span className='text-lg'>Vudeo</span>
-									<span className='text-xs opacity-70'>720p • SUB</span>
-								</button>
+										>
+											<span className='text-lg capitalize'>{playerName}</span>
+											<span className='text-xs opacity-70'>JP • SUB</span>
+										</button>
+									)
+								)
+							) : (
+								<div></div>
 							)}
 						</div>
+						{!currentEpisode && (
+							<p>Brak dostępnych playerów dla tego odcinka. :c</p>
+						)}
 					</div>
 				</div>
 			</main>

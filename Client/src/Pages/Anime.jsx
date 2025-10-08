@@ -135,7 +135,10 @@ const Anime = () => {
 							</div>
 						</div>
 						<div className='flex flex-col lg:flex-row items-center gap-3'>
-							<button className='bg-cta w-full p-2 rounded-xl cursor-pointer'>
+							<button
+								onClick={() => handleEpisodeClick(1)}
+								className='bg-cta w-full p-2 rounded-xl cursor-pointer'
+							>
 								Oglądaj teraz
 							</button>
 							<button className='w-full border-2 border-cta rounded-xl p-2 cursor-pointer'>

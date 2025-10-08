@@ -9,7 +9,7 @@ function App() {
 			<Routes>
 				<Route path='/' element={<Home />} />
 				<Route path='/anime/:animeId' element={<Anime />} />
-				<Route path='/watch/:animeId/:episode' element={<PlayerPage />} />
+				<Route path='/watch/:animeId/:episodeNumber' element={<PlayerPage />} />
 			</Routes>
 		</BrowserRouter>
 	);

@@ -18,13 +18,34 @@ const pool = new Pool({
 		require: true,
 	},
 });
+const getCurrentSeason = () => {
+	const now = new Date();
+	const year = now.getFullYear();
+	const month = now.getMonth() + 1;
 
+	let season;
+	if (month >= 1 && month <= 3) {
+		season = 'winter';
+	} else if (month >= 4 && month <= 6) {
+		season = 'spring';
+	} else if (month >= 7 && month <= 9) {
+		season = 'summer';
+	} else {
+		season = 'fall';
+	}
+	return { year, season };
+};
 app.get('/anime/popular', async (req, res) => {
 	try {
-		const query =
-			'SELECT * FROM anime WHERE mal_id <> ALL($1::int[]) ORDER BY members DESC LIMIT 10';
-
-		const result = await pool.query(query, [BANNED_ID]);
+		const { year, season } = getCurrentSeason();
+		const query = `
+            SELECT * FROM anime 
+            WHERE year = $1 AND season = $2 
+            ORDER BY members DESC 
+            LIMIT 10
+        `;
+		const values = [year, season];
+		const result = await pool.query(query, values);
 		res.json(result.rows);
 	} catch (error) {
 		console.error('Error fetching popular anime:', error);
@@ -68,6 +89,19 @@ app.get('/anime/:id', async (req, res) => {
 		res.json(result.rows[0]);
 	} catch (error) {
 		console.error('Błąd podczas pobierania danych anime:', error);
+		res.status(500).json({ error: 'Wystąpił błąd serwera.' });
+	}
+});
+app.get('/anime/:id/episodes', async (req, res) => {
+	try {
+		const { id } = req.params;
+		const query =
+			'SELECT * FROM episodes WHERE anime_id = $1 ORDER BY episode_number ASC';
+		const result = await pool.query(query, [id]);
+
+		res.json(result.rows);
+	} catch (error) {
+		console.error('Błąd podczas pobierania listy odcinków:', error);
 		res.status(500).json({ error: 'Wystąpił błąd serwera.' });
 	}
 });

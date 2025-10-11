@@ -8,7 +8,12 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3001;
 const BANNED_ID = [1535, 1735, 31964, 11757, 50265, 5114, 38000, 20583];
-app.use(cors());
+app.use(
+	cors({
+		origin: '*',
+		methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+	})
+);
 app.use(express.json());
 
 const { Pool } = pg;

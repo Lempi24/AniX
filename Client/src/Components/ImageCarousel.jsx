@@ -22,6 +22,20 @@ export const ImageCarousel = ({ slides }) => {
 					nextEl: '.swiper-button-next-custom',
 					prevEl: '.swiper-button-prev-custom',
 				}}
+				onSwiper={(swiper) => {
+					const container = swiper.el;
+
+					container.addEventListener('mouseenter', () =>
+						swiper.autoplay.stop()
+					);
+					container.addEventListener('mouseleave', () =>
+						swiper.autoplay.start()
+					);
+					container.addEventListener('touchstart', () =>
+						swiper.autoplay.stop()
+					);
+					container.addEventListener('touchend', () => swiper.autoplay.start());
+				}}
 			>
 				{slides.map((slide, index) => (
 					<SwiperSlide key={index} className='relative text-white'>
@@ -38,7 +52,7 @@ export const ImageCarousel = ({ slides }) => {
 							<p className='text-lg mt-2 max-w-2xl'>{slide.description}</p>
 							<button
 								onClick={slide.buttonAction}
-								className='bg-cta p-3 rounded-xl mt-4 w-fit'
+								className='bg-cta p-3 rounded-xl mt-4 w-fit cursor-pointer hover:bg-cta/60 transition-colors duration-300'
 							>
 								Oglądaj teraz
 							</button>

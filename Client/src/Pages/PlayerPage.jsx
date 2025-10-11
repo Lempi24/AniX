@@ -2,6 +2,7 @@ import Navigation from '../Components/Navigation';
 import { Link, useLocation, useParams, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import Breadcrumbs from '../Components/Breadcrumbs';
 const PlayerPage = () => {
 	const location = useLocation();
 	const navigate = useNavigate();
@@ -9,6 +10,7 @@ const PlayerPage = () => {
 	const { animeId, episodeNumber } = useParams();
 	const [selectedPlayerUrl, setSelectedPlayerUrl] = useState(null);
 	const [currentEpisode, setCurrentEpisode] = useState(null);
+	const [loading, setLoading] = useState(true);
 	const [animeEpisodesData, setAnimeEpisodesData] = useState(
 		location.state?.animeData || null
 	);
@@ -22,11 +24,12 @@ const PlayerPage = () => {
 		'Currently Airing': 'Emitowane',
 	};
 	useEffect(() => {
+		setLoading(true);
 		const fetchAnimeDetails = async () => {
 			if (!animeData) {
 				try {
 					const response = await axios.get(
-						`http://localhost:3001/anime/${animeId}`
+						`${import.meta.env.VITE_BACKEND_URL}/anime/${animeId}`
 					);
 					setAnimeData(response.data);
 				} catch (err) {
@@ -38,7 +41,7 @@ const PlayerPage = () => {
 		const fetchEpisodesList = async () => {
 			try {
 				const response = await axios.get(
-					`http://localhost:3001/anime/${animeId}/episodes`
+					`${import.meta.env.VITE_BACKEND_URL}/anime/${animeId}/episodes`
 				);
 				setAnimeEpisodesData(response.data);
 			} catch (err) {
@@ -47,7 +50,13 @@ const PlayerPage = () => {
 		};
 
 		const fetchAllData = async () => {
-			await Promise.all([fetchAnimeDetails(), fetchEpisodesList()]);
+			try {
+				await Promise.all([fetchAnimeDetails(), fetchEpisodesList()]);
+			} catch (error) {
+				console.error('Błąd podczas pobierania danych:', error);
+			} finally {
+				setLoading(false);
+			}
 		};
 
 		fetchAllData();
@@ -74,23 +83,13 @@ const PlayerPage = () => {
 	}
 	console.log(animeEpisodesData);
 	return (
-		<div className=''>
+		<div>
 			<Navigation />
-			<ul className='flex items-center space-x-2 p-5'>
-				<li>
-					<Link to={`/anime`} className='text-cta'>
-						Anime
-					</Link>
-				</li>
-				<li>{'>'}</li>
-				<li>
-					<Link to={`/anime/${animeId}`} className='text-cta'>
-						{animeData.title}
-					</Link>
-				</li>
-				<li>{'>'}</li>
-				<li>Odcinek {episodeNumber}</li>
-			</ul>
+			<Breadcrumbs
+				animeId={animeId}
+				title={animeData.title}
+				episodeNumber={episodeNumber}
+			/>
 			<main className='relative flex flex-col lg:flex-row-reverse  items-center gap-10 mt-10 max-w-7xl mx-auto px-4'>
 				<div className='flex flex-col gap-5 w-full lg:w-1/3 lg:mb-auto'>
 					<div className='flex items-center gap-5 border-2 rounded-md p-2 border-cta '>
@@ -160,19 +159,23 @@ const PlayerPage = () => {
 					</div>
 					<div className='border-2 border-cta rounded-md p-5 w-full mb-5'>
 						<p className='border-b-2 border-cta text-xl pb-3'>Wybierz player</p>
-						<div className='grid grid-cols-[repeat(auto-fill,minmax(120px,1fr))] gap-3 mt-4 '>
-							{currentEpisode && currentEpisode.player_urls ? (
+						<div className='grid grid-cols-[repeat(auto-fill,minmax(120px,1fr))] gap-3 mt-4'>
+							{loading ? (
+								<p className='text-cta animate-pulse'>Ładowanie playerów...</p>
+							) : currentEpisode &&
+							  currentEpisode.player_urls &&
+							  Object.keys(currentEpisode.player_urls).length > 0 ? (
 								Object.entries(currentEpisode.player_urls).map(
 									([playerName, playerUrl]) => (
 										<button
 											key={playerName}
 											onClick={() => setSelectedPlayerUrl(playerUrl)}
 											className={`flex flex-col items-center justify-center p-3 border-2 border-cta rounded-lg transition-colors cursor-pointer
-                    ${
-											selectedPlayerUrl === playerUrl
-												? 'bg-cta text-black font-bold'
-												: 'hover:bg-cta/20'
-										}`}
+                        ${
+													selectedPlayerUrl === playerUrl
+														? 'bg-cta text-black font-bold'
+														: 'hover:bg-cta/20'
+												}`}
 										>
 											<span className='text-lg capitalize'>{playerName}</span>
 											<span className='text-xs opacity-70'>JP • SUB</span>
@@ -180,12 +183,11 @@ const PlayerPage = () => {
 									)
 								)
 							) : (
-								<div></div>
+								<p className='col-span-full text-center text-cta'>
+									Brak dostępnych playerów dla tego odcinka. :c
+								</p>
 							)}
 						</div>
-						{!currentEpisode && (
-							<p>Brak dostępnych playerów dla tego odcinka. :c</p>
-						)}
 					</div>
 				</div>
 			</main>

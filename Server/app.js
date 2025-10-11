@@ -75,6 +75,71 @@ app.get('/anime/recommended', async (req, res) => {
 		res.status(500).json({ error: 'Internal Server Error' });
 	}
 });
+app.get('/anime/genres', async (req, res) => {
+	try {
+		const query =
+			'SELECT DISTINCT UNNEST(genres) AS genre FROM anime ORDER BY genre ASC';
+
+		const result = await pool.query(query);
+
+		const genres = result.rows.map((row) => row.genre);
+
+		res.json(genres);
+	} catch (error) {
+		console.error('Error fetching genres:', error);
+		res.status(500).json({ error: 'Internal Server Error' });
+	}
+});
+app.get('/anime/browse', async (req, res) => {
+	try {
+		const { year, season } = getCurrentSeason();
+
+		const query = `SELECT * FROM anime WHERE year = $1 AND season = $2 ORDER BY members DESC`;
+
+		const values = [year, season];
+
+		const result = await pool.query(query, values);
+
+		res.json(result.rows);
+	} catch (error) {
+		console.error('Error fetching anime:', error);
+		res.status(500).json({ error: 'Internal Server Error' });
+	}
+});
+app.get('/anime/search', async (req, res) => {
+	const { q } = req.query;
+	if (!q) {
+		return res.json([]);
+	}
+	try {
+		const query = `
+            SELECT
+                *,
+                -- Stwórz wielopoziomowy ranking trafności
+                CASE
+                    WHEN title ILIKE $2 THEN 3 
+                    WHEN title ILIKE $3 THEN 2 
+                    ELSE 1                  
+                END as priority,
+                similarity(title, $1) as sim
+            FROM anime
+            WHERE
+                title ILIKE $3
+                OR word_similarity(title, $1) > 0.4 
+            ORDER BY
+                priority DESC,
+                sim DESC     
+            LIMIT 10;
+        `;
+		const values = [q, `${q}%`, `%${q}%`];
+
+		const result = await pool.query(query, values);
+		res.json(result.rows);
+	} catch (error) {
+		console.error('Błąd podczas wyszukiwania:', error);
+		res.status(500).json({ error: 'Błąd serwera' });
+	}
+});
 app.get('/anime/:id', async (req, res) => {
 	try {
 		const { id } = req.params;
@@ -105,6 +170,7 @@ app.get('/anime/:id/episodes', async (req, res) => {
 		res.status(500).json({ error: 'Wystąpił błąd serwera.' });
 	}
 });
+
 app.listen(PORT, () => {
 	console.log(`Server is running on port ${PORT}`);
 });

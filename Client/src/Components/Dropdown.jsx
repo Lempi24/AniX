@@ -1,0 +1,60 @@
+import { useNavigate } from 'react-router-dom';
+
+const Dropdown = ({ results, onResultClick }) => {
+	const navigate = useNavigate();
+	const statusTranslate = {
+		'Finished Airing': 'Zakończony',
+		'Currently Airing': 'Emitowane',
+	};
+	const starIcon =
+		'M341.5 45.1C337.4 37.1 329.1 32 320.1 32C311.1 32 302.8 37.1 298.7 45.1L225.1 189.3L65.2 214.7C56.3 216.1 48.9 222.4 46.1 231C43.3 239.6 45.6 249 51.9 255.4L166.3 369.9L141.1 529.8C139.7 538.7 143.4 547.7 150.7 553C158 558.3 167.6 559.1 175.7 555L320.1 481.6L464.4 555C472.4 559.1 482.1 558.3 489.4 553C496.7 547.7 500.4 538.8 499 529.8L473.7 369.9L588.1 255.4C594.5 249 596.7 239.6 593.9 231C591.1 222.4 583.8 216.1 574.8 214.7L415 189.3L341.5 45.1z';
+
+	const handleClick = (malId) => {
+		onResultClick();
+		navigate(`/anime/${malId}`);
+	};
+
+	return (
+		<div className='absolute space-y-3 top-20 left-1/2 -translate-x-1/2 z-100 border-2 border-cta bg-main w-full md:w-[500px] lg:w-[700px] p-2 max-h-[600px] overflow-y-auto overflow-x-hidden custom-scroll'>
+			{results.map((result) => (
+				<div
+					key={result.mal_id}
+					onClick={() => handleClick(result.mal_id)}
+					className='flex items-center gap-5 cursor-pointer hover:bg-cta/20 hover:rounded-lg transition-colors duration-300'
+				>
+					<div className='w-[80px] h-[115px] shrink-0'>
+						<img
+							src={result.image_url}
+							alt={result.title}
+							className='w-full h-full object-cover shrink-0 rounded-lg'
+						/>
+					</div>
+					<div className='flex flex-col gap-2'>
+						<p className='text-cta text-xl truncate'>{result.title}</p>
+						<div className='flex gap-2'>
+							<svg
+								xmlns='http://www.w3.org/2000/svg'
+								viewBox='0 0 640 640'
+								className='fill-star w-[15px]'
+							>
+								<path d={starIcon} />
+							</svg>
+							<p className='text-star text-sm'>{result.score || 'N/A'}</p>
+						</div>
+						<p className='text-sm'>{result.episodes} odc.</p>
+						<p
+							className={`${
+								result.status === 'Currently Airing'
+									? 'text-positive bg-positive/20'
+									: 'text-negative bg-negative/20'
+							} rounded-2xl text-center px-2 w-fit`}
+						>
+							{statusTranslate[result.status]}
+						</p>
+					</div>
+				</div>
+			))}
+		</div>
+	);
+};
+export default Dropdown;

@@ -175,6 +175,9 @@ app.get('/anime/:id/episodes', async (req, res) => {
 		res.status(500).json({ error: 'Wystąpił błąd serwera.' });
 	}
 });
+app.get('/', (req, res) => {
+	res.send('Backend działa ✅');
+});
 
 app.listen(PORT, () => {
 	console.log(`Server is running on port ${PORT}`);

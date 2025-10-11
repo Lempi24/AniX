@@ -59,9 +59,19 @@ app.get('/anime/popular', async (req, res) => {
 });
 app.get('/anime/recent', async (req, res) => {
 	try {
-		const query =
-			'SELECT * FROM anime WHERE mal_id <> ALL($1::int[]) ORDER BY created_at DESC NULLS LAST LIMIT 10';
-
+		const query = `
+            SELECT a.*
+            FROM anime a
+            JOIN (
+                -- Znajdź najnowszą datę dodania odcinka dla każdego anime
+                SELECT DISTINCT ON (anime_id) anime_id, created_at AS latest_episode_date
+                FROM episodes
+                ORDER BY anime_id, created_at DESC
+            ) AS latest_episodes ON a.mal_id = latest_episodes.anime_id
+            WHERE a.mal_id <> ALL($1::int[]) -- Zachowujemy Twoją listę banów
+            ORDER BY latest_episodes.latest_episode_date DESC -- Sortuj po dacie ostatniego odcinka
+            LIMIT 10;
+        `;
 		const result = await pool.query(query, [BANNED_ID]);
 		res.json(result.rows);
 	} catch (error) {

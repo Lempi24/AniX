@@ -47,12 +47,17 @@ export const ImageCarousel = ({ slides }) => {
 							/>
 						</div>
 
-						<div className='relative flex flex-col justify-end h-[40vh] lg:h-[50vh] max-h-[500px] max-w-6xl mx-auto px-8 pb-10 z-10'>
-							<h2 className='text-4xl lg:text-5xl font-bold'>{slide.title}</h2>
-							<p className='text-lg mt-2 max-w-2xl'>{slide.description}</p>
+						<div className='relative flex flex-col justify-between h-[40vh] lg:h-[50vh] max-h-[500px] max-w-6xl mx-auto px-8 py-10 z-10'>
+							<div className='flex-1 flex flex-col justify-center'>
+								<h2 className='text-2xl lg:text-5xl font-bold'>
+									{slide.title}
+								</h2>
+								<p className='mt-2 max-w-2xl'>{slide.description}</p>
+							</div>
+
 							<button
 								onClick={slide.buttonAction}
-								className='bg-cta p-3 rounded-xl mt-4 w-fit cursor-pointer hover:bg-cta/60 transition-colors duration-300'
+								className='text-sm bg-cta p-3 rounded-xl w-fit cursor-pointer hover:bg-cta/60 transition-colors duration-300'
 							>
 								Oglądaj teraz
 							</button>

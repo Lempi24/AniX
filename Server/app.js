@@ -143,12 +143,14 @@ app.get('/anime/search', async (req, res) => {
 });
 app.get('/anime/filter', async (req, res) => {
 	try {
-		const { genres } = req.query;
+		const { genres, page = 1, limit = 20 } = req.query;
 		const genreFilters = Array.isArray(genres)
 			? genres
 			: genres
 			? [genres]
 			: [];
+
+		const offset = (parseInt(page) - 1) * parseInt(limit);
 
 		let query;
 		let values;
@@ -159,19 +161,17 @@ app.get('/anime/filter', async (req, res) => {
 			query = `
                 SELECT * FROM anime
                 WHERE genres @> $1::TEXT[]
-                ORDER BY members DESC NULLS LAST;
+                ORDER BY title ASC NULLS LAST
+				LIMIT $2 OFFSET $3;
             `;
-			values = [genreFilters];
+			values = [genreFilters, limit, offset];
 		} else {
-			console.log('Brak filtrów, pokazuję obecny sezon.');
-
-			const { year, season } = getCurrentSeason();
 			query = `
                 SELECT * FROM anime
-                WHERE year = $1 AND season = $2
-                ORDER BY members DESC NULLS LAST;
+                ORDER BY title ASC NULLS LAST
+				LIMIT $1 OFFSET $2;
             `;
-			values = [year, season];
+			values = [limit, offset];
 		}
 
 		const result = await pool.query(query, values);

@@ -105,22 +105,6 @@ app.get('/anime/genres', async (req, res) => {
 		res.status(500).json({ error: 'Internal Server Error' });
 	}
 });
-app.get('/anime/browse', async (req, res) => {
-	try {
-		const { year, season } = getCurrentSeason();
-
-		const query = `SELECT * FROM anime WHERE year = $1 AND season = $2 ORDER BY members DESC`;
-
-		const values = [year, season];
-
-		const result = await pool.query(query, values);
-
-		res.json(result.rows);
-	} catch (error) {
-		console.error('Error fetching anime:', error);
-		res.status(500).json({ error: 'Internal Server Error' });
-	}
-});
 app.get('/anime/search', async (req, res) => {
 	const { q } = req.query;
 	if (!q) {
@@ -130,20 +114,22 @@ app.get('/anime/search', async (req, res) => {
 		const query = `
             SELECT
                 *,
-                -- Stwórz wielopoziomowy ranking trafności
+                -- Rozszerzamy ranking, aby uwzględniał OBA tytuły
                 CASE
-                    WHEN title ILIKE $2 THEN 3 
-                    WHEN title ILIKE $3 THEN 2 
-                    ELSE 1                  
+                    WHEN title ILIKE $2 OR english_title ILIKE $2 THEN 3 -- Dopasowanie od początku
+                    WHEN title ILIKE $3 OR english_title ILIKE $3 THEN 2 -- Dopasowanie w środku
+                    ELSE 1
                 END as priority,
-                similarity(title, $1) as sim
+                -- Wybierz NAJLEPSZE dopasowanie z obu tytułów
+                GREATEST(similarity(title, $1), similarity(COALESCE(english_title, ''), $1)) as sim
             FROM anime
             WHERE
-                title ILIKE $3
-                OR word_similarity(title, $1) > 0.4 
+                -- Rozszerzamy wyszukiwanie, aby uwzględniało OBA tytuły
+                (title ILIKE $3 OR english_title ILIKE $3)
+                OR (word_similarity(title, $1) > 0.4 OR word_similarity(COALESCE(english_title, ''), $1) > 0.4)
             ORDER BY
                 priority DESC,
-                sim DESC     
+                sim DESC       
             LIMIT 10;
         `;
 		const values = [q, `${q}%`, `%${q}%`];
@@ -152,6 +138,46 @@ app.get('/anime/search', async (req, res) => {
 		res.json(result.rows);
 	} catch (error) {
 		console.error('Błąd podczas wyszukiwania:', error);
+		res.status(500).json({ error: 'Błąd serwera' });
+	}
+});
+app.get('/anime/filter', async (req, res) => {
+	try {
+		const { genres } = req.query;
+		const genreFilters = Array.isArray(genres)
+			? genres
+			: genres
+			? [genres]
+			: [];
+
+		let query;
+		let values;
+
+		if (genreFilters.length > 0) {
+			console.log('Filtruję po gatunkach:', genreFilters);
+
+			query = `
+                SELECT * FROM anime
+                WHERE genres @> $1::TEXT[]
+                ORDER BY members DESC NULLS LAST;
+            `;
+			values = [genreFilters];
+		} else {
+			console.log('Brak filtrów, pokazuję obecny sezon.');
+
+			const { year, season } = getCurrentSeason();
+			query = `
+                SELECT * FROM anime
+                WHERE year = $1 AND season = $2
+                ORDER BY members DESC NULLS LAST;
+            `;
+			values = [year, season];
+		}
+
+		const result = await pool.query(query, values);
+		res.json(result.rows);
+	} catch (error) {
+		console.error('Błąd podczas filtrowania anime:', error);
 		res.status(500).json({ error: 'Błąd serwera' });
 	}
 });

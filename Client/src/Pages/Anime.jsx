@@ -22,25 +22,36 @@ const Anime = () => {
 	const [allGenres, setAllGenres] = useState(null);
 	const [allAnime, setAllAnime] = useState(null);
 	const [loading, setLoading] = useState(true);
-	const fetchAllGenresAndAnime = async () => {
-		setLoading(true);
-		try {
-			const requests = [
-				axios.get(`${import.meta.env.VITE_BACKEND_URL}/anime/genres`),
-				axios.get(`${import.meta.env.VITE_BACKEND_URL}/anime/browse`),
-			];
-			const [allGenresResponse, allAnimeResponse] = await Promise.all(requests);
-			setAllGenres(allGenresResponse.data);
-			setAllAnime(allAnimeResponse.data);
-		} catch (error) {
-			console.error('Error catching genres: ', error);
-		} finally {
-			setLoading(false);
-		}
-	};
+	const [choosenFilters, setChoosenFilters] = useState([]);
 	useEffect(() => {
-		fetchAllGenresAndAnime();
-	}, []);
+		const fetchData = async () => {
+			setLoading(true);
+			try {
+				const genresResponse = await axios.get(
+					`${import.meta.env.VITE_BACKEND_URL}/anime/genres`
+				);
+				setAllGenres(genresResponse.data);
+
+				const params = new URLSearchParams();
+				choosenFilters.forEach((genre) => params.append('genres', genre));
+
+				const animeResponse = await axios.get(
+					`${
+						import.meta.env.VITE_BACKEND_URL
+					}/anime/filter?${params.toString()}`
+				);
+				setAllAnime(animeResponse.data);
+			} catch (error) {
+				console.error('Error fetching genres or anime: ', error);
+			} finally {
+				setLoading(false);
+			}
+		};
+
+		fetchData();
+	}, [choosenFilters]);
+
+	console.log(allGenres);
 	const handleAnimeClick = (animeObject) => {
 		navigate(`/anime/${animeObject.mal_id}`, {
 			state: { animeData: animeObject },
@@ -71,11 +82,22 @@ const Anime = () => {
 							<>Ładowanie</>
 						) : (
 							<>
-								<button className='border-2 border-cta bg-cta p-2 rounded-2xl text-sm cursor-pointer'>
-									Obecny sezon
-								</button>
 								{allGenres.map((genre) => (
-									<button className='border-2 border-cta p-2 rounded-2xl text-sm cursor-pointer'>
+									<button
+										onClick={() =>
+											setChoosenFilters((prev) =>
+												prev.includes(genre)
+													? prev.filter((g) => g !== genre)
+													: [...prev, genre]
+											)
+										}
+										className={`border-2 p-2 rounded-2xl text-sm cursor-pointer 
+													${
+														choosenFilters.includes(genre)
+															? 'bg-cta text-white border-cta'
+															: 'border-cta'
+													}`}
+									>
 										{genre}
 									</button>
 								))}
@@ -86,15 +108,12 @@ const Anime = () => {
 				<div>
 					<h2 className='font-bold text-2xl mb-3'>Wyniki</h2>
 
-					{/* Logika renderowania warunkowego */}
 					<div className='grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 justify-items-center mt-5'>
 						{loading
-							? // Jeśli się ładuje, pokaż 12 szkieletów
-							  Array.from({ length: 12 }).map((_, index) => (
+							? Array.from({ length: 12 }).map((_, index) => (
 									<AnimeCardSkeleton key={index} />
 							  ))
-							: // Jeśli załadowane, pokaż prawdziwe karty
-							  allAnime.map((anime) => (
+							: allAnime.map((anime) => (
 									<div
 										key={anime.mal_id}
 										onClick={() => handleAnimeClick(anime)}

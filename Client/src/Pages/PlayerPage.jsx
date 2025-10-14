@@ -177,7 +177,10 @@ const PlayerPage = () => {
 														: 'hover:bg-cta/20'
 												}`}
 										>
-											<span className='text-lg capitalize'>{playerName}</span>
+											<span className='text-lg capitalize'>
+												{' '}
+												{playerName.replace(/ Cafe$/i, '')}
+											</span>
 											<span className='text-xs opacity-70'>JP • SUB</span>
 										</button>
 									)

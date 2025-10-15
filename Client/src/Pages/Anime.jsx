@@ -6,6 +6,19 @@ import AnimeCard from '../Components/AnimeCard';
 import AnimeCardSkeleton from '../Components/Anime/AnimeCardSkeleton';
 
 const Anime = () => {
+	const genresTranslate = {
+		Action: 'Akcja',
+		Romance: 'Romans',
+		Adventure: 'Przygoda',
+		Sports: 'Sportowy',
+		'Award Winning': 'Nagradzany',
+		Comedy: 'Komedia',
+		Drama: 'Dramat',
+		Erotica: 'Erotyczne',
+		Mystery: 'Tajemnica',
+		Gourmet: 'Kulinarne',
+		'Slice of Life': 'Okruchy życia',
+	};
 	const navigate = useNavigate();
 	const [allGenres, setAllGenres] = useState(null);
 	const [allAnime, setAllAnime] = useState([]);
@@ -89,6 +102,7 @@ const Anime = () => {
 	return (
 		<div>
 			<Navigation />
+
 			<main className='space-y-5 px-5 py-10 max-w-7xl mx-auto'>
 				<div className='p-5 lg:w-2/3'>
 					<h2 className='font-bold text-2xl mb-3'>Sortowanie</h2>
@@ -127,7 +141,7 @@ const Anime = () => {
 											: 'border-cta'
 									}`}
 								>
-									{genre}
+									{genresTranslate[genre] || genre}
 								</button>
 							))
 						)}

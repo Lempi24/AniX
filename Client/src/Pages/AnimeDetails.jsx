@@ -32,7 +32,9 @@ const AnimeDetails = () => {
 		Erotica: 'Erotyczne',
 		Mystery: 'Tajemnica',
 	};
-
+	const sourceTranslate = {
+		Game: 'Gra',
+	};
 	useEffect(() => {
 		setAnimeData(null);
 		setAnimeRelations(null);
@@ -167,7 +169,7 @@ const AnimeDetails = () => {
 								</div>
 								<div className='flex items-center justify-between border-b border-cta/50 pb-2'>
 									<p className='text-text-accent'>Źródło</p>
-									<p>{animeData.source}</p>
+									<p>{sourceTranslate[animeData.source]}</p>
 								</div>
 								<div className='flex items-center justify-between border-b border-cta/50 pb-2'>
 									<p className='text-text-accent'>Dł. odcinka</p>

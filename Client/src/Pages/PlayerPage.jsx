@@ -14,7 +14,9 @@ const PlayerPage = () => {
 	const [animeEpisodesData, setAnimeEpisodesData] = useState(
 		location.state?.animeData || null
 	);
+	const totalEpisodes = animeData?.episodes;
 	const handleEpisodeChange = (newEpisodeNumber) => {
+		if (newEpisodeNumber <= 0 || newEpisodeNumber > totalEpisodes) return;
 		setSelectedPlayerUrl(null);
 		navigate(`/watch/${animeId}/${newEpisodeNumber}`);
 	};
@@ -82,6 +84,7 @@ const PlayerPage = () => {
 		);
 	}
 	console.log(animeEpisodesData);
+
 	return (
 		<div>
 			<Navigation />
@@ -102,16 +105,16 @@ const PlayerPage = () => {
 							<h2 className='font-bold text-lg'>{animeData.title}</h2>
 							<div className='text-sm text-accent'>
 								<p>Ocena: N/A</p>
-								<p>Odcinki: {animeData.episodes}</p>
+								<p>Odcinki: {totalEpisodes}</p>
 								<p>Status: {statusTranslate[animeData.status] || 'N/A'}</p>
 								<p>Rok: {animeData.year}</p>
 							</div>
 						</div>
 					</div>
-					<div className='border-2 border-cta rounded-md p-5 w-full'>
+					<div className='border-2 border-cta rounded-md p-5 w-full custom-scroll'>
 						<p className='border-b-2 border-cta text-xl pb-3'>Lista odcinków</p>
-						<div className='flex flex-col mt-3 max-h-[300px] overflow-auto gap-2'>
-							{Array.from({ length: animeData.episodes }, (_, i) => i + 1).map(
+						<div className='flex flex-col mt-3 max-h-[300px] overflow-auto gap-2 pr-2 custom-scroll'>
+							{Array.from({ length: totalEpisodes }, (_, i) => i + 1).map(
 								(epNum) => (
 									<button
 										key={epNum}
@@ -156,6 +159,51 @@ const PlayerPage = () => {
 								</div>
 							)}
 						</div>
+					</div>
+					<div className='flex items-center justify-center gap-4 border-2 border-cta rounded-md p-3 w-full mb-5'>
+						<button
+							onClick={() => handleEpisodeChange(Number(episodeNumber) - 1)}
+							disabled={episodeNumber <= 1}
+							className='p-3 rounded-full transition-colors hover:bg-cta/20 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer'
+						>
+							<svg
+								xmlns='http://www.w3.org/2000/svg'
+								className='h-6 w-6 stroke-cta'
+								fill='none'
+								viewBox='0 0 24 24'
+							>
+								<path
+									strokeLinecap='round'
+									strokeLinejoin='round'
+									strokeWidth={2}
+									d='M15 19l-7-7 7-7'
+								/>
+							</svg>
+						</button>
+
+						<div className='text-lg font-semibold'>
+							Odcinek {episodeNumber} / {totalEpisodes}
+						</div>
+
+						<button
+							onClick={() => handleEpisodeChange(Number(episodeNumber) + 1)}
+							disabled={episodeNumber >= totalEpisodes}
+							className='p-3 rounded-full transition-colors hover:bg-cta/20 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer'
+						>
+							<svg
+								xmlns='http://www.w3.org/2000/svg'
+								className='h-6 w-6 stroke-cta'
+								fill='none'
+								viewBox='0 0 24 24'
+							>
+								<path
+									strokeLinecap='round'
+									strokeLinejoin='round'
+									strokeWidth={2}
+									d='M9 5l7 7-7 7'
+								/>
+							</svg>
+						</button>
 					</div>
 					<div className='border-2 border-cta rounded-md p-5 w-full mb-5'>
 						<p className='border-b-2 border-cta text-xl pb-3'>Wybierz player</p>

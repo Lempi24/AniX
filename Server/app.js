@@ -181,6 +181,47 @@ app.get('/anime/filter', async (req, res) => {
 		res.status(500).json({ error: 'Błąd serwera' });
 	}
 });
+app.get('/anime/:id/relations', async (req, res) => {
+	const { id } = req.params;
+
+	try {
+		const initialRes = await pool.query(
+			'SELECT prequel_id, sequel_id FROM anime WHERE mal_id = $1',
+			[id]
+		);
+
+		if (initialRes.rows.length === 0) {
+			return res.json([]);
+		}
+
+		const { prequel_id, sequel_id } = initialRes.rows[0];
+		const relationIds = [];
+		if (prequel_id) relationIds.push(prequel_id);
+		if (sequel_id) relationIds.push(sequel_id);
+
+		if (relationIds.length === 0) {
+			return res.json([]);
+		}
+
+		const relationsQuery = `
+            SELECT mal_id, title, english_title, image_url, episodes
+            FROM anime
+            WHERE mal_id = ANY($1::int[]);
+        `;
+
+		const relationsRes = await pool.query(relationsQuery, [relationIds]);
+
+		const finalRelations = relationsRes.rows.map((anime) => ({
+			...anime,
+			relation_type: anime.mal_id === prequel_id ? 'Prequel' : 'Sequel',
+		}));
+
+		res.json(finalRelations);
+	} catch (error) {
+		console.error(`Błąd podczas pobierania powiązań dla anime ${id}:`, error);
+		res.status(500).json({ error: 'Błąd serwera' });
+	}
+});
 app.get('/anime/:id', async (req, res) => {
 	try {
 		const { id } = req.params;

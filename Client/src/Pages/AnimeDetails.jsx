@@ -12,8 +12,8 @@ const AnimeDetails = () => {
 	const { animeId } = useParams();
 	const [loading, setLoading] = useState(true);
 	const [animeData, setAnimeData] = useState(null);
+	const [animeRelations, setAnimeRelations] = useState(null);
 	const [isTrailerOpen, setIsTrailerOpen] = useState(false);
-
 	const seasonsTranslate = {
 		summer: 'Lato',
 		winter: 'Zima',
@@ -35,26 +35,38 @@ const AnimeDetails = () => {
 
 	useEffect(() => {
 		setAnimeData(null);
+		setAnimeRelations(null);
 
 		if (location.state?.animeData) {
 			setAnimeData(location.state.animeData);
-			setLoading(false);
 		} else {
 			const fetchAnimeData = async () => {
-				setLoading(true);
 				try {
 					const response = await axios.get(
 						`${import.meta.env.VITE_BACKEND_URL}/anime/${animeId}`
 					);
 					setAnimeData(response.data);
 				} catch (err) {
-					console.error('Error fetching anime:', err);
-				} finally {
-					setLoading(false);
+					console.error('Error fetching anime data:', err);
 				}
 			};
 			fetchAnimeData();
 		}
+
+		const fetchAnimeRelations = async () => {
+			setLoading(true);
+			try {
+				const response = await axios.get(
+					`${import.meta.env.VITE_BACKEND_URL}/anime/${animeId}/relations`
+				);
+				setAnimeRelations(response.data);
+			} catch (err) {
+				console.error('Error fetching anime relations:', err);
+			} finally {
+				setLoading(false);
+			}
+		};
+		fetchAnimeRelations();
 	}, [animeId]);
 
 	const handleEpisodeClick = (episodeNumber) => {
@@ -78,6 +90,9 @@ const AnimeDetails = () => {
 			</div>
 		);
 	}
+	const handleAnimeClick = (anime) => {
+		navigate(`/anime/${anime.mal_id}`);
+	};
 
 	return (
 		<div className='pb-10'>
@@ -136,31 +151,60 @@ const AnimeDetails = () => {
 							</div>
 						)}
 					</div>
-
-					<div className='border-2 border-cta rounded-md p-5 w-full lg:w-1/3 mt-5 lg:mt-0'>
-						<p className='border-b-2 border-cta text-xl pb-3'>Informacje</p>
-						<div className='mt-3 space-y-3 text-sm'>
-							<div className='flex items-center justify-between border-b border-cta/50 pb-2'>
-								<p className='text-text-accent'>Studio</p>
-								<p>{animeData.studio}</p>
+					<div className='w-full space-y-5 lg:w-1/3'>
+						<div className='border-2 border-cta rounded-md p-5 w-full mt-5 lg:mt-0'>
+							<p className='border-b-2 border-cta text-xl pb-3'>Informacje</p>
+							<div className='mt-3 space-y-3 text-sm'>
+								<div className='flex items-center justify-between border-b border-cta/50 pb-2'>
+									<p className='text-text-accent'>Studio</p>
+									<p>{animeData.studio}</p>
+								</div>
+								<div className='flex items-center justify-between border-b border-cta/50 pb-2'>
+									<p className='text-text-accent'>Sezon</p>
+									<p>{`${seasonsTranslate[animeData.season] || ''} ${
+										animeData.year || ''
+									}`}</p>
+								</div>
+								<div className='flex items-center justify-between border-b border-cta/50 pb-2'>
+									<p className='text-text-accent'>Źródło</p>
+									<p>{animeData.source}</p>
+								</div>
+								<div className='flex items-center justify-between border-b border-cta/50 pb-2'>
+									<p className='text-text-accent'>Dł. odcinka</p>
+									<p>{animeData.duration?.split('per')[0]}</p>
+								</div>
+								<div className='flex items-center justify-between border-b border-cta/50 pb-2'>
+									<p className='text-text-accent'>Klasyfikacja</p>
+									<p>{animeData.rating?.split(' - ')[0]}</p>
+								</div>
 							</div>
-							<div className='flex items-center justify-between border-b border-cta/50 pb-2'>
-								<p className='text-text-accent'>Sezon</p>
-								<p>{`${seasonsTranslate[animeData.season] || ''} ${
-									animeData.year || ''
-								}`}</p>
-							</div>
-							<div className='flex items-center justify-between border-b border-cta/50 pb-2'>
-								<p className='text-text-accent'>Źródło</p>
-								<p>{animeData.source}</p>
-							</div>
-							<div className='flex items-center justify-between border-b border-cta/50 pb-2'>
-								<p className='text-text-accent'>Dł. odcinka</p>
-								<p>{animeData.duration?.split('per')[0]}</p>
-							</div>
-							<div className='flex items-center justify-between border-b border-cta/50 pb-2'>
-								<p className='text-text-accent'>Klasyfikacja</p>
-								<p>{animeData.rating?.split(' - ')[0]}</p>
+						</div>
+						<div className='border-2 border-cta rounded-md p-5 w-full mt-5 lg:mt-0'>
+							<p className='border-b-2 border-cta text-xl pb-3'>Powiązane</p>
+							<div className='grid grid-cols-2 md:grid-cols-3 gap-4 mt-4'>
+								{animeRelations.map((relation) => {
+									return (
+										<div
+											onClick={() => handleAnimeClick(relation)}
+											key={relation.mal_id}
+											className='relative rounded-xl overflow-hidden w-full h-full shrink-0 cursor-pointer group'
+										>
+											<img
+												src={relation.image_url}
+												alt={relation.title}
+												className='object-cover w-full aspect-[2/3]'
+											/>
+											<div className='absolute top-1 right-1 border-2 border-cta text-cta bg-main/90 p-1 rounded-2xl  text-[.7rem] transition-opacity group-hover:opacity-0 duration-300'>
+												{relation.relation_type}
+											</div>
+											<div className='absolute inset-x-0 bottom-0 h-1/3 bg-main/70 transition-all duration-300 ease-in-out group-hover:h-full flex flex-col justify-between p-2 md:p-3'>
+												<h3 className='text-base md:text-lg truncate group-hover:whitespace-normal group-hover:overflow-visible'>
+													{relation.title}
+												</h3>
+											</div>
+										</div>
+									);
+								})}
 							</div>
 						</div>
 					</div>

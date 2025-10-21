@@ -61,7 +61,7 @@ const Home = () => {
 			src: 'https://cdn.myanimelist.net/images/anime/1364/151767l.jpg',
 			title: 'Sanda',
 			description:
-				'Anime studia Science SARU od twórczyni Beastars, w niedalekiej przyszłości, gdzie liczba urodzeń dramatycznie spada, nastolatek Sanda odkrywa, że jest potomkiem Świętego Mikołaja i zmuszony zostaje ratować przyjaciółkę koleżanki przed zniknięciem.',
+				'Anime studia Science SARU, w niedalekiej przyszłości nastolatek Sanda odkrywa, że jest potomkiem Świętego Mikołaja i musi ratować przyjaciółkę przed zniknięciem.',
 			buttonAction: () => handleAnimeClick(59267),
 		},
 	];

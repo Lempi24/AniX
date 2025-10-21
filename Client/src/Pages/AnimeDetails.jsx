@@ -182,8 +182,8 @@ const AnimeDetails = () => {
 						<div className='border-2 border-cta rounded-md p-5 w-full mt-5 lg:mt-0'>
 							<p className='border-b-2 border-cta text-xl pb-3'>Powiązane</p>
 							<div className='grid grid-cols-2 md:grid-cols-3 gap-4 mt-4'>
-								{animeRelations.map((relation) => {
-									return (
+								{animeRelations && animeRelations.length > 0 ? (
+									animeRelations.map((relation) => (
 										<div
 											onClick={() => handleAnimeClick(relation)}
 											key={relation.mal_id}
@@ -194,7 +194,7 @@ const AnimeDetails = () => {
 												alt={relation.title}
 												className='object-cover w-full aspect-[2/3]'
 											/>
-											<div className='absolute top-1 right-1 border-2 border-cta text-cta bg-main/90 p-1 rounded-2xl  text-[.7rem] transition-opacity group-hover:opacity-0 duration-300'>
+											<div className='absolute top-1 right-1 border-2 border-cta text-cta bg-main/90 p-1 rounded-2xl text-[.7rem] transition-opacity group-hover:opacity-0 duration-300'>
 												{relation.relation_type}
 											</div>
 											<div className='absolute inset-x-0 bottom-0 h-1/3 bg-main/70 transition-all duration-300 ease-in-out group-hover:h-full flex flex-col justify-between p-2 md:p-3'>
@@ -203,8 +203,12 @@ const AnimeDetails = () => {
 												</h3>
 											</div>
 										</div>
-									);
-								})}
+									))
+								) : (
+									<div className='col-span-full border border-dashed border-cta p-5 mt-5 rounded-md w-full text-center'>
+										<p>Brak powiązanych anime w bazie :c</p>
+									</div>
+								)}
 							</div>
 						</div>
 					</div>

@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import Dropdown from './Dropdown';
 import axios from 'axios';
 
-const Navigation = () => {
+const Navigation = ({ onLoginClick }) => {
 	const navigate = useNavigate();
 	const [searchTerm, setSearchTerm] = useState('');
 	const [results, setResults] = useState([]);
@@ -80,7 +80,9 @@ const Navigation = () => {
 						</NavLink>
 					</li>
 					<li>
-						<a>Logowanie</a>
+						<button onClick={onLoginClick} className='cursor-pointer'>
+							Logowanie
+						</button>
 					</li>
 				</ul>
 				<button
@@ -134,7 +136,9 @@ const Navigation = () => {
 						</NavLink>
 					</li>
 					<li>
-						<a onClick={toggleMobileMenu}>Logowanie</a>
+						<button onClick={onLoginClick} className='cursor-pointer'>
+							Logowanie
+						</button>
 					</li>
 				</ul>
 			)}

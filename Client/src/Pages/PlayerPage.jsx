@@ -75,7 +75,6 @@ const PlayerPage = () => {
 	if (!animeData) {
 		return (
 			<div>
-				<Navigation />
 				<h1>Nie znaleziono danych anime!</h1>
 				<p>
 					Wróć na <Link to='/'>stronę główną</Link> i wybierz anime.
@@ -87,7 +86,6 @@ const PlayerPage = () => {
 
 	return (
 		<div>
-			<Navigation />
 			<Breadcrumbs
 				animeId={animeId}
 				title={animeData.title}

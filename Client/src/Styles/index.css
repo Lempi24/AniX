@@ -24,7 +24,11 @@ body {
 		font-family: 'Roboto Mono', sans-serif;
 	}
 }
-
+.toast-auto-width {
+	width: fit-content !important;
+	max-width: fit-content !important;
+	min-width: unset !important;
+}
 .custom-scroll::-webkit-scrollbar {
 	width: 4px;
 }

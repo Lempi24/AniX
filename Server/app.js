@@ -2,7 +2,8 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import pg from 'pg';
-
+import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
 dotenv.config();
 
 const app = express();
@@ -40,6 +41,81 @@ const getCurrentSeason = () => {
 	}
 	return { year, season };
 };
+app.post('/auth/login', async (req, res) => {
+	try {
+		const { username, password } = req.body;
+
+		if (!username || !password) {
+			return res.status(400).json({ error: 'Proszę wypełnić wszystkie pola.' });
+		}
+
+		const userResult = await pool.query(
+			'SELECT * FROM users WHERE email = $1 OR username = $1',
+			[username]
+		);
+		if (userResult.rows.length === 0) {
+			return res.status(401).json({ error: 'Nieprawidłowe dane' });
+		}
+		const user = userResult.rows[0];
+
+		const isPasswordValid = await bcrypt.compare(password, user.password_hash);
+		if (!isPasswordValid) {
+			return res.status(401).json({ error: 'Nieprawidłowe dane' });
+		}
+
+		const token = jwt.sign(
+			{ userId: user.id, username: user.username },
+			process.env.JWT_SECRET,
+			{ expiresIn: '7d' }
+		);
+
+		res.json({
+			message: 'Zalogowano pomyślnie!',
+			token,
+			user: {
+				id: user.id,
+				username: user.username,
+				email: user.email,
+			},
+		});
+	} catch (error) {
+		console.error('Błąd podczas logowania:', error);
+		res.status(500).json({ error: 'Wystąpił błąd serwera.' });
+	}
+});
+
+app.put('/auth/register', async (req, res) => {
+	try {
+		const { username, email, password } = req.body;
+		if (!username || !email || !password) {
+			return res.status(400).json({ error: 'Proszę wypełnić wszystkie pola' });
+		}
+
+		const userCheck = await pool.query(
+			'SELECT * FROM users WHERE email = $1 OR username = $2',
+			[email, username]
+		);
+		if (userCheck.rows.length > 0) {
+			return res
+				.status(400)
+				.json({ error: 'Użytkownik o tym e-mailu lub nazwie już istnieje' });
+		}
+
+		const saltRounds = 10;
+		const passwordHash = await bcrypt.hash(password, saltRounds);
+
+		await pool.query(
+			'INSERT INTO users (username, email, password_hash) VALUES ($1, $2, $3)',
+			[username, email, passwordHash]
+		);
+
+		res.status(201).json({ message: 'Użytkownik pomyślnie zarejestrowany!' });
+	} catch (error) {
+		console.error('Błąd podczas rejestracji:', error);
+		res.status(500).json({ error: 'Wystąpił błąd serwera.' });
+	}
+});
+
 app.get('/anime/popular', async (req, res) => {
 	try {
 		const { year, season } = getCurrentSeason();

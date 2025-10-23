@@ -67,7 +67,6 @@ const Home = () => {
 	];
 	return (
 		<div>
-			<Navigation onAnimeClick={handleAnimeClick} />
 			<main className='space-y-5 lg:flex lg:flex-col lg:items-center lg:justify-center'>
 				<ImageCarousel slides={slides} />
 				{loading ? (

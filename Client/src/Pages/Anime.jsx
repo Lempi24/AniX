@@ -101,7 +101,7 @@ const Anime = () => {
 
 	return (
 		<div>
-			<Navigation />
+			
 
 			<main className='space-y-5 px-5 py-10 max-w-7xl mx-auto'>
 				<div className='p-5 lg:w-2/3'>

@@ -79,7 +79,7 @@ const AnimeDetails = () => {
 	if (loading) {
 		return (
 			<>
-				<Navigation />
+				
 				<AnimeDetailsSkeleton />
 			</>
 		);
@@ -87,7 +87,7 @@ const AnimeDetails = () => {
 	if (!animeData) {
 		return (
 			<div>
-				<Navigation />
+				
 				<h1>Nie znaleziono danych anime!</h1>
 			</div>
 		);
@@ -98,7 +98,7 @@ const AnimeDetails = () => {
 
 	return (
 		<div className='pb-10'>
-			<Navigation />
+			
 			{animeData && <Breadcrumbs animeId={animeId} title={animeData.title} />}
 			<div className='relative flex flex-col items-center gap-10 mt-10 max-w-7xl mx-auto px-4'>
 				<AnimeHeader
@@ -169,7 +169,7 @@ const AnimeDetails = () => {
 								</div>
 								<div className='flex items-center justify-between border-b border-cta/50 pb-2'>
 									<p className='text-text-accent'>Źródło</p>
-									<p>{sourceTranslate[animeData.source]}</p>
+									<p>{sourceTranslate[animeData.source] || animeData.source}</p>
 								</div>
 								<div className='flex items-center justify-between border-b border-cta/50 pb-2'>
 									<p className='text-text-accent'>Dł. odcinka</p>

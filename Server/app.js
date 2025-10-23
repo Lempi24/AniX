@@ -41,6 +41,42 @@ const getCurrentSeason = () => {
 	}
 	return { year, season };
 };
+app.get('/auth/verify', authenticateToken, async (req, res) => {
+	try {
+		const userResult = await pool.query(
+			'SELECT id, username, email, avatar_url FROM users WHERE id = $1',
+			[req.user.userId]
+		);
+
+		if (userResult.rows.length === 0) {
+			return res.status(401).json({ error: 'Nieprawidłowy token' });
+		}
+
+		res.json({
+			user: userResult.rows[0],
+		});
+	} catch (error) {
+		console.error('Błąd verify:', error);
+		res.status(500).json({ error: 'Błąd serwera' });
+	}
+});
+
+function authenticateToken(req, res, next) {
+	const authHeader = req.headers['authorization'];
+	const token = authHeader && authHeader.split(' ')[1];
+
+	if (!token) {
+		return res.status(401).json({ error: 'Token wymagany' });
+	}
+
+	jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+		if (err) {
+			return res.status(403).json({ error: 'Nieprawidłowy token' });
+		}
+		req.user = user;
+		next();
+	});
+}
 app.post('/auth/login', async (req, res) => {
 	try {
 		const { username, password } = req.body;
@@ -84,7 +120,7 @@ app.post('/auth/login', async (req, res) => {
 	}
 });
 
-app.put('/auth/register', async (req, res) => {
+app.post('/auth/register', async (req, res) => {
 	try {
 		const { username, email, password } = req.body;
 		if (!username || !email || !password) {

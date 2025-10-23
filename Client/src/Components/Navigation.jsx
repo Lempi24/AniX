@@ -2,13 +2,16 @@ import { useNavigate, NavLink } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import Dropdown from './Dropdown';
 import axios from 'axios';
-
+import { useAuth } from '../Context/AuthContext';
+import Menu from './Menu';
 const Navigation = ({ onLoginClick }) => {
+	const { isAuthenticated, logout, user, loading } = useAuth();
 	const navigate = useNavigate();
 	const [searchTerm, setSearchTerm] = useState('');
 	const [results, setResults] = useState([]);
 	const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-
+	const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+	const [isMobileUserMenuOpen, setIsMobileUserMenuOpen] = useState(false);
 	useEffect(() => {
 		if (searchTerm.trim() === '') {
 			setResults([]);
@@ -39,7 +42,8 @@ const Navigation = ({ onLoginClick }) => {
 
 	const activeLinkClass = 'border-b-2 border-cta pb-1';
 	const inactiveLinkClass = '';
-
+	const angleIcon =
+		'M297.4 438.6C309.9 451.1 330.2 451.1 342.7 438.6L502.7 278.6C515.2 266.1 515.2 245.8 502.7 233.3C490.2 220.8 469.9 220.8 457.4 233.3L320 370.7L182.6 233.4C170.1 220.9 149.8 220.9 137.3 233.4C124.8 245.9 124.8 266.2 137.3 278.7L297.3 438.7z';
 	return (
 		<div className='relative'>
 			<nav className='relative flex items-center justify-between bg-secondary p-4 border-b-3 border-cta z-20'>
@@ -80,9 +84,22 @@ const Navigation = ({ onLoginClick }) => {
 						</NavLink>
 					</li>
 					<li>
-						<button onClick={onLoginClick} className='cursor-pointer'>
-							Logowanie
-						</button>
+						{!loading && isAuthenticated ? (
+							<button
+								onClick={() => setIsUserMenuOpen((prev) => !prev)}
+								className='w-10 overflow-hidden rounded-full cursor-pointer'
+							>
+								<img
+									src={user?.avatar_url}
+									alt='User avatar'
+									className='w-full'
+								/>
+							</button>
+						) : (
+							<button onClick={onLoginClick} className='cursor-pointer'>
+								Logowanie
+							</button>
+						)}
 					</li>
 				</ul>
 				<button
@@ -114,9 +131,55 @@ const Navigation = ({ onLoginClick }) => {
 			{results.length > 0 && (
 				<Dropdown results={results} onResultClick={handleResultClick} />
 			)}
-
+			{isUserMenuOpen && (
+				<Menu
+					user={user}
+					onLogOut={logout}
+					closeMenu={() => setIsUserMenuOpen(false)}
+				/>
+			)}
 			{isMobileMenuOpen && (
 				<ul className='lg:hidden absolute w-full bg-secondary border-b-3 border-cta p-4 space-y-4 z-10'>
+					{user && (
+						<div
+							onClick={() => setIsMobileUserMenuOpen((prev) => !prev)}
+							className='flex items-center gap-3'
+						>
+							<img
+								src={user?.avatar_url}
+								alt='Avatar'
+								className='w-12 h-12 rounded-full border-2 border-cta'
+							/>
+							<div className='flex-1 min-w-0'>
+								<p className='text-white font-semibold text-sm truncate'>
+									{user?.username}
+								</p>
+								<p className='text-white/50 text-xs truncate'>{user?.email}</p>
+							</div>
+							<svg
+								xmlns='http://www.w3.org/2000/svg'
+								viewBox='0 0 640 640'
+								className={`w-[25px] fill-cta transition-all duration-300 ${
+									isMobileUserMenuOpen ? 'rotate-180' : 'rotate-0'
+								}`}
+							>
+								<path d={angleIcon} />
+							</svg>
+						</div>
+					)}
+					{isMobileUserMenuOpen && (
+						<div className='flex flex-col gap-3 bg-main/20 p-3 rounded-2xl'>
+							<NavLink to='/profile' className=''>
+								<span className='font-medium'>Profil</span>
+							</NavLink>
+							<NavLink to='/profile' className=''>
+								<span className='font-medium'>Lista anime</span>
+							</NavLink>
+							<NavLink to='/profile' className=''>
+								<span className='font-medium'>Ustawienia</span>
+							</NavLink>
+						</div>
+					)}
 					<li>
 						<NavLink
 							to='/'
@@ -136,9 +199,15 @@ const Navigation = ({ onLoginClick }) => {
 						</NavLink>
 					</li>
 					<li>
-						<button onClick={onLoginClick} className='cursor-pointer'>
-							Logowanie
-						</button>
+						{isAuthenticated ? (
+							<button onClick={() => logout()} className='cursor-pointer'>
+								Wyloguj
+							</button>
+						) : (
+							<button onClick={onLoginClick} className='cursor-pointer'>
+								Logowanie
+							</button>
+						)}
 					</li>
 				</ul>
 			)}

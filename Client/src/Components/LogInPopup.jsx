@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import axios from 'axios';
 import toast from 'react-hot-toast';
+import { useAuth } from '../Context/AuthContext';
 const LoginPopup = ({ isOpen, onClose }) => {
 	const {
 		register,
@@ -10,7 +11,9 @@ const LoginPopup = ({ isOpen, onClose }) => {
 		reset,
 		formState: { errors },
 	} = useForm();
+	const { login } = useAuth();
 	const [isLoging, setIsLoging] = useState(true);
+
 	const closeIcon =
 		'M183.1 137.4C170.6 124.9 150.3 124.9 137.8 137.4C125.3 149.9 125.3 170.2 137.8 182.7L275.2 320L137.9 457.4C125.4 469.9 125.4 490.2 137.9 502.7C150.4 515.2 170.7 515.2 183.2 502.7L320.5 365.3L457.9 502.6C470.4 515.1 490.7 515.1 503.2 502.6C515.7 490.1 515.7 469.8 503.2 457.3L365.8 320L503.1 182.6C515.6 170.1 515.6 149.8 503.1 137.3C490.6 124.8 470.3 124.8 457.8 137.3L320.5 274.7L183.1 137.4z';
 
@@ -21,11 +24,11 @@ const LoginPopup = ({ isOpen, onClose }) => {
 				data,
 				{ headers: { 'Content-Type': 'application/json' } }
 			);
-			if (response.status == 200) {
+			if (response.status === 200) {
+				login(response.data.token, response.data.user);
 				onClose();
 				reset();
 				toast.success(`Witaj ${response.data.user.username}!`);
-				localStorage.setItem('token', response.data.token);
 			}
 		} catch (error) {
 			toast.error(error.response?.data?.error || 'Coś poszło nie tak.');
@@ -33,12 +36,14 @@ const LoginPopup = ({ isOpen, onClose }) => {
 	};
 	const onRegisterSubmit = async (data) => {
 		try {
-			const response = await axios.put(
+			const response = await axios.post(
 				`${import.meta.env.VITE_BACKEND_URL}/auth/register`,
 				data,
 				{ headers: { 'Content-Type': 'application/json' } }
 			);
 			toast.success(response.data.message || 'Rejestracja powiodła się!');
+			setIsLoging(true);
+			reset();
 		} catch (error) {
 			toast.error(error.response?.data?.error || 'Coś poszło nie tak.');
 		}

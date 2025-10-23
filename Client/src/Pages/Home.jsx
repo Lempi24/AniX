@@ -1,5 +1,4 @@
 import { ImageCarousel } from '../Components/ImageCarousel';
-import Navigation from '../Components/Navigation';
 import AnimeCardSection from '../Components/AnimeCardSection';
 import { useState, useEffect } from 'react';
 import axios from 'axios';

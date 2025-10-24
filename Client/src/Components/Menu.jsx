@@ -24,7 +24,7 @@ const Menu = ({ user, onLogOut, closeMenu }) => {
 				<li>
 					<NavLink
 						to='/profile'
-						className='flex items-center px-4 py-3 text-white/80 hover:bg-cta/15 hover:text-cta transition-all duration-200 border-l-3 border-transparent hover:border-l-cta'
+						className='flex items-center px-4 py-3  hover:bg-cta/20 hover:text-cta transition-all duration-200 border-l-3 border-transparent hover:border-l-cta'
 					>
 						<span className='font-medium'>Profil</span>
 					</NavLink>
@@ -32,7 +32,7 @@ const Menu = ({ user, onLogOut, closeMenu }) => {
 				<li>
 					<NavLink
 						to='/my-list'
-						className='flex items-center px-4 py-3 text-white/80 hover:bg-cta/15 hover:text-cta transition-all duration-200 border-l-3 border-transparent hover:border-l-cta'
+						className='flex items-center px-4 py-3  hover:bg-cta/20 hover:text-cta transition-all duration-200 border-l-3 border-transparent hover:border-l-cta'
 					>
 						<span className='font-medium'>Lista anime</span>
 					</NavLink>
@@ -40,7 +40,7 @@ const Menu = ({ user, onLogOut, closeMenu }) => {
 				<li>
 					<NavLink
 						to='/settings'
-						className='flex items-center px-4 py-3 text-white/80 hover:bg-cta/15 hover:text-cta transition-all duration-200 border-l-3 border-transparent hover:border-l-cta'
+						className='flex items-center px-4 py-3  hover:bg-cta/20 hover:text-cta transition-all duration-200 border-l-3 border-transparent hover:border-l-cta'
 					>
 						<span className='font-medium'>Ustawienia</span>
 					</NavLink>

@@ -17,12 +17,14 @@ const AnimeHeader = ({
 		'Currently Airing': 'Emitowane',
 	};
 	const statuses = [
-		{ key: 'watching', label: 'Oglądam', color: 'bg-green-400' },
-		{ key: 'completed', label: 'Ukończone', color: 'bg-blue-400' },
-		{ key: 'planned', label: 'Planuję', color: 'bg-yellow-400' },
-		{ key: 'on_hold', label: 'Wstrzymane', color: 'bg-orange-400' },
-		{ key: 'dropped', label: 'Porzucone', color: 'bg-red-400' },
+		{ key: 'watching', label: 'Oglądam', color: 'hover:bg-green-400' },
+		{ key: 'completed', label: 'Ukończone', color: 'hover:bg-blue-400' },
+		{ key: 'planned', label: 'Planuję', color: 'hover:bg-yellow-400' },
+		{ key: 'on_hold', label: 'Wstrzymane', color: 'hover:bg-orange-400' },
+		{ key: 'dropped', label: 'Porzucone', color: 'hover:bg-red-400' },
 	];
+	const [hovered, setHovered] = useState(0);
+	const stars = [1, 2, 3, 4, 5];
 	const starIcon =
 		'M341.5 45.1C337.4 37.1 329.1 32 320.1 32C311.1 32 302.8 37.1 298.7 45.1L225.1 189.3L65.2 214.7C56.3 216.1 48.9 222.4 46.1 231C43.3 239.6 45.6 249 51.9 255.4L166.3 369.9L141.1 529.8C139.7 538.7 143.4 547.7 150.7 553C158 558.3 167.6 559.1 175.7 555L320.1 481.6L464.4 555C472.4 559.1 482.1 558.3 489.4 553C496.7 547.7 500.4 538.8 499 529.8L473.7 369.9L588.1 255.4C594.5 249 596.7 239.6 593.9 231C591.1 222.4 583.8 216.1 574.8 214.7L415 189.3L341.5 45.1z';
 	const playIcon =
@@ -86,6 +88,37 @@ const AnimeHeader = ({
 						<p className='font-bold text-lg'>{year || 'N/A'}</p>
 					</div>
 				</div>
+				<div className='w-full space-y-5'>
+					<div className='border-2 border-cta rounded-md p-5 w-full mt-5 space-y-5 lg:mt-0'>
+						<p className='border-b-2 border-cta text-xl pb-3'>Twoja ocena</p>
+						<div className='flex items-center gap-2 mt-5'>
+							{stars.map((num) => (
+								<div>
+									<svg
+										xmlns='http://www.w3.org/2000/svg'
+										viewBox='0 0 640 640'
+										onMouseEnter={() => setHovered(num)}
+										onMouseLeave={() => setHovered(0)}
+										className={` stroke-star stroke-30 w-[30px] transition-colors cursor-pointer ${
+											hovered >= num ? 'fill-star' : 'fill-transparent'
+										}`}
+									>
+										<path d={starIcon} />
+									</svg>
+								</div>
+							))}
+							<span className='ml-10'>-</span>
+						</div>
+						<div className='flex gap-3'>
+							<button className='bg-cta w-full p-2 rounded-xl cursor-pointer'>
+								Zapisz ocenę
+							</button>
+							<button className='border-2 border-cta w-full p-2 rounded-xl cursor-pointer'>
+								Wyczyść
+							</button>
+						</div>
+					</div>
+				</div>
 				<div className='flex flex-col lg:flex-row items-center gap-3'>
 					<button
 						onClick={watchNow}
@@ -106,7 +139,7 @@ const AnimeHeader = ({
 									{statuses.map((status) => (
 										<li
 											key={status.key}
-											className={`${status.color} hover:bg-cta/20 cursor-pointer rounded-xl p-1`}
+											className={` ${status.color} hover:text-main border-l-3 border-transparent  cursor-pointer p-1 transition-colors duration-200 ease-in-out`}
 										>
 											{status.label}
 										</li>

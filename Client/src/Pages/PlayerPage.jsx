@@ -5,6 +5,7 @@ import axios from 'axios';
 import Breadcrumbs from '../Components/Breadcrumbs';
 import { useAuth } from '../Context/AuthContext';
 import PlayerPageSkeleton from '../Components/PlayerPageSkeleton';
+import toast from 'react-hot-toast';
 const PlayerPage = () => {
 	const { isAuthenticated } = useAuth();
 	const location = useLocation();
@@ -22,6 +23,7 @@ const PlayerPage = () => {
 	const totalEpisodes = animeData?.episodes;
 	const [watchedEpisodes, setWatchedEpisodes] = useState({});
 	const [hasChanges, setHasChanges] = useState(false);
+	const [isEpisodeSaving, setIsEpisodeSaving] = useState(false);
 	const handleEpisodeChange = (newEpisodeNumber) => {
 		if (newEpisodeNumber <= 0 || newEpisodeNumber > totalEpisodes) return;
 		setSelectedPlayerUrl(null);
@@ -122,6 +124,7 @@ const PlayerPage = () => {
 		}
 	};
 	const handleSaveEpisodes = async () => {
+		setIsEpisodeSaving(true);
 		const payload = Object.entries(watchedEpisodes).map(
 			([episodeNumber, isWatched]) => ({
 				episodeNumber: Number(episodeNumber),
@@ -136,9 +139,12 @@ const PlayerPage = () => {
 				payload,
 				{ headers: { Authorization: `Bearer ${token}` } }
 			);
+
 			setHasChanges(false);
 		} catch (error) {
 			console.error('Nie można zapisać odcinków:', error);
+		} finally {
+			setIsEpisodeSaving(false);
 		}
 	};
 	const popupMessage =
@@ -228,9 +234,19 @@ const PlayerPage = () => {
 							onClick={() => {
 								handleSaveEpisodes();
 							}}
-							className='mt-3 bg-cta text-main font-semibold py-2 px-4 rounded-md hover:bg-cta/80 transition-colors cursor-pointer'
+							className={`relative mt-3 border-2 border-cta font-semibold py-2 px-4 rounded-md hover:bg-cta/20 hover:text-cta transition-colors ${
+								isEpisodeSaving ? 'cursor-not-allowed' : 'cursor-pointer'
+							} `}
+							disabled={isEpisodeSaving}
 						>
-							Zapisz zmiany
+							<span className={isEpisodeSaving ? 'invisible' : ''}>
+								Zapisz zmiany
+							</span>
+							{isEpisodeSaving && (
+								<div className='absolute flex items-center justify-center inset-0'>
+									<div className='w-6 h-6 border-4 border-cta border-t-transparent rounded-full animate-spin'></div>
+								</div>
+							)}
 						</button>
 					)}
 				</div>

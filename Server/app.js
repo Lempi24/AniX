@@ -101,9 +101,11 @@ app.post('/auth/login', async (req, res) => {
 			return res.status(400).json({ error: 'Proszę wypełnić wszystkie pola.' });
 		}
 
+		const normalizedUsername = username.toLowerCase();
+
 		const userResult = await pool.query(
-			'SELECT * FROM users WHERE email = $1 OR username = $1',
-			[username]
+			'SELECT * FROM users WHERE LOWER(email) = $1 OR LOWER(username) = $1',
+			[normalizedUsername]
 		);
 		if (userResult.rows.length === 0) {
 			return res.status(401).json({ error: 'Nieprawidłowe dane' });
@@ -142,9 +144,10 @@ app.post('/auth/register', async (req, res) => {
 		if (!username || !email || !password) {
 			return res.status(400).json({ error: 'Proszę wypełnić wszystkie pola' });
 		}
-
+		username = username.toLowerCase();
+		email = email.toLowerCase();
 		const userCheck = await pool.query(
-			'SELECT * FROM users WHERE email = $1 OR username = $2',
+			'SELECT * FROM users WHERE LOWER(email) = $1 OR LOWER(username) = $2',
 			[email, username]
 		);
 		if (userCheck.rows.length > 0) {
@@ -495,6 +498,59 @@ app.get(
 		}
 	}
 );
+app.get('/user/watched-episodes', authenticateToken, async (req, res) => {
+	const { animeId } = req.query;
+	const userId = req.user.userId;
+
+	try {
+		const queryResponse = await pool.query(
+			'SELECT episode_number, iswatched FROM user_episode_progress WHERE anime_id = $1 AND user_id = $2',
+			[animeId, userId]
+		);
+		res.json(queryResponse.rows);
+	} catch (error) {
+		console.error('Nie pobrano danych:', error);
+		res.status(500).json({ message: 'Błąd servera' });
+	}
+});
+app.put('/user/:animeId/watched', authenticateToken, async (req, res) => {
+	const { animeId } = req.params;
+	const userId = req.user.userId;
+	const episodes = req.body;
+
+	if (!Array.isArray(episodes)) {
+		return res.status(400).json({ error: 'Payload musi być tablicą' });
+	}
+	try {
+		const updatePromises = episodes.map((episode) => {
+			const { episodeNumber, isWatched } = episode;
+
+			const upsertQuery = `
+                INSERT INTO user_episode_progress (user_id, anime_id, episode_number, isWatched)
+                VALUES ($1, $2, $3, $4)
+                ON CONFLICT (user_id, anime_id, episode_number)
+                DO UPDATE SET isWatched = $4;
+            `;
+
+			return pool.query(upsertQuery, [
+				userId,
+				animeId,
+				episodeNumber,
+				isWatched,
+			]);
+		});
+		await Promise.all(updatePromises);
+		res
+			.status(200)
+			.json({ message: 'Status obejrzanych odcinków zaktualizowany' });
+	} catch (error) {
+		console.error(
+			'Błąd podczas aktualizacji statusu obejrzanych odcinków:',
+			error
+		);
+		res.status(500).json({ error: 'Błąd serwera podczas zapisu danych' });
+	}
+});
 app.get('/', (req, res) => {
 	res.send('Backend działa ✅');
 });

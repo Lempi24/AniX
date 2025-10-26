@@ -26,6 +26,7 @@ const AnimeCardSection = ({ h2, animeList = [], onAnimeClick }) => {
 								title={anime.title}
 								imageUrl={anime.image_url}
 								episodes={anime.episodes}
+								score={anime.score}
 							/>
 						</div>
 					</SwiperSlide>

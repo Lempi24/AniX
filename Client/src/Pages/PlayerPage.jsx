@@ -1,11 +1,16 @@
-import Navigation from '../Components/Navigation';
+import InfoPopup from '../Components/InfoPopup';
 import { Link, useLocation, useParams, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import Breadcrumbs from '../Components/Breadcrumbs';
+import { useAuth } from '../Context/AuthContext';
+import PlayerPageSkeleton from '../Components/PlayerPageSkeleton';
 const PlayerPage = () => {
+	const { isAuthenticated } = useAuth();
 	const location = useLocation();
 	const navigate = useNavigate();
+	const [isInfoPopupVisible, setIsInfoPopupVisible] = useState(false);
+	const popupLocalStorageKey = 'adblockInfoDismissed';
 	const [animeData, setAnimeData] = useState(location.state?.animeData || null);
 	const { animeId, episodeNumber } = useParams();
 	const [selectedPlayerUrl, setSelectedPlayerUrl] = useState(null);
@@ -15,6 +20,8 @@ const PlayerPage = () => {
 		location.state?.animeData || null
 	);
 	const totalEpisodes = animeData?.episodes;
+	const [watchedEpisodes, setWatchedEpisodes] = useState({});
+	const [hasChanges, setHasChanges] = useState(false);
 	const handleEpisodeChange = (newEpisodeNumber) => {
 		if (newEpisodeNumber <= 0 || newEpisodeNumber > totalEpisodes) return;
 		setSelectedPlayerUrl(null);
@@ -25,6 +32,13 @@ const PlayerPage = () => {
 		'Finished Airing': 'Zakończony',
 		'Currently Airing': 'Emitowane',
 	};
+	useEffect(() => {
+		const popupDismissed = localStorage.getItem(popupLocalStorageKey);
+
+		if (!popupDismissed) {
+			setIsInfoPopupVisible(true);
+		}
+	}, []);
 	useEffect(() => {
 		setLoading(true);
 		const fetchAnimeDetails = async () => {
@@ -50,10 +64,38 @@ const PlayerPage = () => {
 				console.error('Error fetching episodes list:', err);
 			}
 		};
+		const fetchUserEpisodeData = async () => {
+			const token = localStorage.getItem('token');
+			if (!token) {
+				return console.error('No auth token found');
+			}
+			try {
+				const response = await axios.get(
+					`${import.meta.env.VITE_BACKEND_URL}/user/watched-episodes`,
+					{
+						headers: { Authorization: `Bearer ${token}` },
+						params: {
+							animeId,
+						},
+					}
+				);
 
+				const formattedWatched = {};
+				response.data.forEach((ep) => {
+					formattedWatched[ep.episode_number] = ep.iswatched;
+				});
+				setWatchedEpisodes(formattedWatched);
+			} catch (err) {
+				console.error('Error fetching episodes data:', err);
+			}
+		};
 		const fetchAllData = async () => {
 			try {
-				await Promise.all([fetchAnimeDetails(), fetchEpisodesList()]);
+				await Promise.all([
+					fetchAnimeDetails(),
+					fetchEpisodesList(),
+					fetchUserEpisodeData(),
+				]);
 			} catch (error) {
 				console.error('Błąd podczas pobierania danych:', error);
 			} finally {
@@ -71,7 +113,40 @@ const PlayerPage = () => {
 			setCurrentEpisode(foundEpisode);
 		}
 	}, [episodeNumber, animeEpisodesData]);
-	console.log('Obecny odcinek:', currentEpisode);
+	const handleCloseInfoPopup = () => {
+		setIsInfoPopupVisible(false);
+		try {
+			localStorage.setItem(popupLocalStorageKey, 'true');
+		} catch (error) {
+			console.error('Nie można zapisać w localStorage:', error);
+		}
+	};
+	const handleSaveEpisodes = async () => {
+		const payload = Object.entries(watchedEpisodes).map(
+			([episodeNumber, isWatched]) => ({
+				episodeNumber: Number(episodeNumber),
+				isWatched,
+			})
+		);
+		try {
+			const token = localStorage.getItem('token');
+			if (!token) return console.error('No auth token found');
+			await axios.put(
+				`${import.meta.env.VITE_BACKEND_URL}/user/${animeId}/watched`,
+				payload,
+				{ headers: { Authorization: `Bearer ${token}` } }
+			);
+			setHasChanges(false);
+		} catch (error) {
+			console.error('Nie można zapisać odcinków:', error);
+		}
+	};
+	const popupMessage =
+		'Niektóre zewnętrzne odtwarzacze wideo mogą wyświetlać reklamy. Istnieją narzędzia przeglądarkowe pozwalające dostosować sposób wyświetlania treści.';
+
+	if (loading) {
+		return <PlayerPageSkeleton />;
+	}
 	if (!animeData) {
 		return (
 			<div>
@@ -82,7 +157,6 @@ const PlayerPage = () => {
 			</div>
 		);
 	}
-	console.log(animeEpisodesData);
 
 	return (
 		<div>
@@ -114,25 +188,51 @@ const PlayerPage = () => {
 						<div className='flex flex-col mt-3 max-h-[300px] overflow-auto gap-2 pr-2 custom-scroll'>
 							{Array.from({ length: totalEpisodes }, (_, i) => i + 1).map(
 								(epNum) => (
-									<button
-										key={epNum}
-										onClick={() => handleEpisodeChange(epNum)}
-										className={`${
-											epNum == episodeNumber ? 'bg-cta' : ''
-										} border-2 border-cta rounded-md p-2 cursor-pointer`}
-									>
-										<p
+									<div className='relative w-full'>
+										<button
+											key={epNum}
+											onClick={() => handleEpisodeChange(epNum)}
 											className={`${
-												epNum == episodeNumber ? 'text-main' : 'text-cta'
-											}`}
+												epNum == episodeNumber ? 'bg-cta/40' : ''
+											} border-2 border-cta rounded-md p-2 cursor-pointer w-full`}
 										>
-											Odcinek {epNum}
-										</p>
-									</button>
+											<p
+												className={`${
+													epNum == episodeNumber ? 'text-main' : 'text-cta'
+												}`}
+											>
+												Odcinek {epNum}
+											</p>
+										</button>
+										{isAuthenticated && (
+											<input
+												type='checkbox'
+												checked={watchedEpisodes[epNum]}
+												onChange={() => {
+													setWatchedEpisodes((prev) => {
+														const updated = { ...prev, [epNum]: !prev[epNum] };
+														return updated;
+													});
+													setHasChanges(true);
+												}}
+												className='absolute top-1/2 -translate-y-1/2 left-5'
+											/>
+										)}
+									</div>
 								)
 							)}
 						</div>
 					</div>
+					{hasChanges && (
+						<button
+							onClick={() => {
+								handleSaveEpisodes();
+							}}
+							className='mt-3 bg-cta text-main font-semibold py-2 px-4 rounded-md hover:bg-cta/80 transition-colors cursor-pointer'
+						>
+							Zapisz zmiany
+						</button>
+					)}
 				</div>
 				<div className='flex flex-col gap-5 w-full lg:w-2/3'>
 					<p className='font-bold text-2xl'>
@@ -158,6 +258,9 @@ const PlayerPage = () => {
 							)}
 						</div>
 					</div>
+					{isInfoPopupVisible && (
+						<InfoPopup message={popupMessage} onClose={handleCloseInfoPopup} />
+					)}
 					<div className='flex items-center justify-center gap-4 border-2 border-cta rounded-md p-3 w-full mb-5'>
 						<button
 							onClick={() => handleEpisodeChange(Number(episodeNumber) - 1)}

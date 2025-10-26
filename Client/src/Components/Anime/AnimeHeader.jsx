@@ -270,9 +270,9 @@ const AnimeHeader = ({
 					<div className='relative w-full'>
 						<button
 							onClick={() => setIsDropDownOpen((prev) => !prev)}
-							className={`w-full border-2 rounded-xl p-2 transition-colors duration-300 flex items-center justify-center ${
+							className={`w-full border-2 rounded-xl p-2 transition-colors duration-300 flex items-center  justify-center ${
 								isAuthenticated
-									? `border-cta ${currentStatus?.color} cursor-pointer`
+									? `border-cta hover:bg-cta/20 ${currentStatus?.color} cursor-pointer`
 									: 'border-secondary text-secondary cursor-not-allowed'
 							}`}
 							disabled={isStatusLoading}

@@ -4,6 +4,7 @@ import Dropdown from './Dropdown';
 import axios from 'axios';
 import { useAuth } from '../Context/AuthContext';
 import Menu from './Menu';
+import useClickOutside from '../hooks/useClickOutside';
 const Navigation = ({ onLoginClick }) => {
 	const { isAuthenticated, logout, user, loading } = useAuth();
 	const navigate = useNavigate();
@@ -12,6 +13,10 @@ const Navigation = ({ onLoginClick }) => {
 	const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 	const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 	const [isMobileUserMenuOpen, setIsMobileUserMenuOpen] = useState(false);
+	const userMenuRef = useClickOutside(() => setIsUserMenuOpen(false));
+	const dropdownRef = useClickOutside(() => setResults([]));
+	const mobileMenuRef = useClickOutside(() => setIsMobileMenuOpen(false));
+
 	useEffect(() => {
 		if (searchTerm.trim() === '') {
 			setResults([]);
@@ -129,87 +134,95 @@ const Navigation = ({ onLoginClick }) => {
 			</nav>
 
 			{results.length > 0 && (
-				<Dropdown results={results} onResultClick={handleResultClick} />
+				<div ref={dropdownRef}>
+					<Dropdown results={results} onResultClick={handleResultClick} />
+				</div>
 			)}
 			{isUserMenuOpen && (
-				<Menu
-					user={user}
-					onLogOut={logout}
-					closeMenu={() => setIsUserMenuOpen(false)}
-				/>
+				<div ref={userMenuRef}>
+					<Menu
+						user={user}
+						onLogOut={logout}
+						closeMenu={() => setIsUserMenuOpen(false)}
+					/>
+				</div>
 			)}
 			{isMobileMenuOpen && (
-				<ul className='lg:hidden absolute w-full bg-secondary border-b-3 border-cta p-4 space-y-4 z-10'>
-					{user && (
-						<div
-							onClick={() => setIsMobileUserMenuOpen((prev) => !prev)}
-							className='flex items-center gap-3'
-						>
-							<img
-								src={user?.avatar_url}
-								alt='Avatar'
-								className='w-12 h-12 rounded-full border-2 border-cta'
-							/>
-							<div className='flex-1 min-w-0'>
-								<p className='text-white font-semibold text-sm truncate'>
-									{user?.username}
-								</p>
-								<p className='text-white/50 text-xs truncate'>{user?.email}</p>
-							</div>
-							<svg
-								xmlns='http://www.w3.org/2000/svg'
-								viewBox='0 0 640 640'
-								className={`w-[25px] fill-cta transition-all duration-300 ${
-									isMobileUserMenuOpen ? 'rotate-180' : 'rotate-0'
-								}`}
+				<div ref={mobileMenuRef}>
+					<ul className='lg:hidden absolute w-full bg-secondary border-b-3 border-cta p-4 space-y-4 z-10'>
+						{user && (
+							<div
+								onClick={() => setIsMobileUserMenuOpen((prev) => !prev)}
+								className='flex items-center gap-3'
 							>
-								<path d={angleIcon} />
-							</svg>
-						</div>
-					)}
-					{isMobileUserMenuOpen && (
-						<div className='flex flex-col gap-3 bg-main/20 p-3 rounded-2xl'>
-							<NavLink to='/profile' className=''>
-								<span className='font-medium'>Profil</span>
-							</NavLink>
-							<NavLink to='/profile' className=''>
-								<span className='font-medium'>Lista anime</span>
-							</NavLink>
-							<NavLink to='/profile' className=''>
-								<span className='font-medium'>Ustawienia</span>
-							</NavLink>
-						</div>
-					)}
-					<li>
-						<NavLink
-							to='/'
-							onClick={toggleMobileMenu}
-							className={({ isActive }) => (isActive ? 'text-cta' : '')}
-						>
-							Strona główna
-						</NavLink>
-					</li>
-					<li>
-						<NavLink
-							to='/anime'
-							onClick={toggleMobileMenu}
-							className={({ isActive }) => (isActive ? 'text-cta' : '')}
-						>
-							Anime
-						</NavLink>
-					</li>
-					<li>
-						{isAuthenticated ? (
-							<button onClick={() => logout()} className='cursor-pointer'>
-								Wyloguj
-							</button>
-						) : (
-							<button onClick={onLoginClick} className='cursor-pointer'>
-								Logowanie
-							</button>
+								<img
+									src={user?.avatar_url}
+									alt='Avatar'
+									className='w-12 h-12 rounded-full border-2 border-cta'
+								/>
+								<div className='flex-1 min-w-0'>
+									<p className='text-white font-semibold text-sm truncate'>
+										{user?.username}
+									</p>
+									<p className='text-white/50 text-xs truncate'>
+										{user?.email}
+									</p>
+								</div>
+								<svg
+									xmlns='http://www.w3.org/2000/svg'
+									viewBox='0 0 640 640'
+									className={`w-[25px] fill-cta transition-all duration-300 ${
+										isMobileUserMenuOpen ? 'rotate-180' : 'rotate-0'
+									}`}
+								>
+									<path d={angleIcon} />
+								</svg>
+							</div>
 						)}
-					</li>
-				</ul>
+						{isMobileUserMenuOpen && (
+							<div className='flex flex-col gap-3 bg-main/20 p-3 rounded-2xl'>
+								<NavLink to='/profile' className=''>
+									<span className='font-medium'>Profil</span>
+								</NavLink>
+								<NavLink to='/profile' className=''>
+									<span className='font-medium'>Lista anime</span>
+								</NavLink>
+								<NavLink to='/profile' className=''>
+									<span className='font-medium'>Ustawienia</span>
+								</NavLink>
+							</div>
+						)}
+						<li>
+							<NavLink
+								to='/'
+								onClick={toggleMobileMenu}
+								className={({ isActive }) => (isActive ? 'text-cta' : '')}
+							>
+								Strona główna
+							</NavLink>
+						</li>
+						<li>
+							<NavLink
+								to='/anime'
+								onClick={toggleMobileMenu}
+								className={({ isActive }) => (isActive ? 'text-cta' : '')}
+							>
+								Anime
+							</NavLink>
+						</li>
+						<li>
+							{isAuthenticated ? (
+								<button onClick={() => logout()} className='cursor-pointer'>
+									Wyloguj
+								</button>
+							) : (
+								<button onClick={onLoginClick} className='cursor-pointer'>
+									Logowanie
+								</button>
+							)}
+						</li>
+					</ul>
+				</div>
 			)}
 		</div>
 	);

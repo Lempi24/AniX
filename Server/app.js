@@ -141,7 +141,7 @@ app.post('/auth/register', async (req, res) => {
 		const passwordHash = await bcrypt.hash(password, saltRounds);
 
 		await pool.query(
-			'INSERT INTO users (username, email, password_hash) VALUES ($1, $2, $3)',
+			'INSERT INTO users (username, email, password_hash, avatar_url) VALUES ($1, $2, $3, https://placehold.co/150x150/1a1a2e/e94560?text=:-))',
 			[username, email, passwordHash]
 		);
 

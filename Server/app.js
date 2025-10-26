@@ -140,7 +140,7 @@ app.post('/auth/login', async (req, res) => {
 
 app.post('/auth/register', async (req, res) => {
 	try {
-		const { username, email, password } = req.body;
+		let { username, email, password } = req.body;
 		if (!username || !email || !password) {
 			return res.status(400).json({ error: 'Proszę wypełnić wszystkie pola' });
 		}
@@ -160,8 +160,13 @@ app.post('/auth/register', async (req, res) => {
 		const passwordHash = await bcrypt.hash(password, saltRounds);
 
 		await pool.query(
-			'INSERT INTO users (username, email, password_hash, avatar_url) VALUES ($1, $2, $3, https://placehold.co/150x150/1a1a2e/e94560?text=:-))',
-			[username, email, passwordHash]
+			'INSERT INTO users (username, email, password_hash, avatar_url) VALUES ($1, $2, $3, $4)',
+			[
+				username,
+				email,
+				passwordHash,
+				'https://placehold.co/150x150/1a1a2e/e94560?text=:-)',
+			]
 		);
 
 		res.status(201).json({ message: 'Użytkownik pomyślnie zarejestrowany!' });
@@ -461,16 +466,29 @@ app.put('/user/anime-score', authenticateToken, async (req, res) => {
 
 	try {
 		await validateUserAndAnime(userId, id);
+		await pool.query(
+			`
+            INSERT INTO user_anime_library (user_id, anime_id, status, is_favorite, user_score, updated_at)
+            VALUES ($1, $2, '', false, $3, NOW())
+            ON CONFLICT (user_id, anime_id)
+            DO UPDATE SET user_score = EXCLUDED.user_score, updated_at = NOW()
+            `,
+			[userId, id, score]
+		);
 
 		await pool.query(
 			`
-            INSERT INTO user_anime_library (user_id, anime_id, status, is_favorite, user_score)
-            VALUES ($1, $2, '', false, $3)
-            ON CONFLICT (user_id, anime_id)
-            DO UPDATE SET user_score = EXCLUDED.user_score
-        `,
-			[userId, id, score]
+            UPDATE anime
+            SET score = (
+                SELECT AVG(user_score)::numeric(3,2)
+                FROM user_anime_library
+                WHERE anime_id = $1 AND user_score IS NOT NULL
+            )
+            WHERE anime.mal_id = $1
+            `,
+			[id]
 		);
+
 		res.status(200).json({ message: `Ocena ustawiona na ${score}` });
 	} catch (err) {
 		console.error(err);

@@ -13,11 +13,12 @@ const LoginPopup = ({ isOpen, onClose }) => {
 	} = useForm();
 	const { login } = useAuth();
 	const [isLoging, setIsLoging] = useState(true);
-
+	const [loading, setLoading] = useState(false);
 	const closeIcon =
 		'M183.1 137.4C170.6 124.9 150.3 124.9 137.8 137.4C125.3 149.9 125.3 170.2 137.8 182.7L275.2 320L137.9 457.4C125.4 469.9 125.4 490.2 137.9 502.7C150.4 515.2 170.7 515.2 183.2 502.7L320.5 365.3L457.9 502.6C470.4 515.1 490.7 515.1 503.2 502.6C515.7 490.1 515.7 469.8 503.2 457.3L365.8 320L503.1 182.6C515.6 170.1 515.6 149.8 503.1 137.3C490.6 124.8 470.3 124.8 457.8 137.3L320.5 274.7L183.1 137.4z';
 
 	const onLoginSubmit = async (data) => {
+		setLoading(true);
 		try {
 			const response = await axios.post(
 				`${import.meta.env.VITE_BACKEND_URL}/auth/login`,
@@ -32,9 +33,12 @@ const LoginPopup = ({ isOpen, onClose }) => {
 			}
 		} catch (error) {
 			toast.error(error.response?.data?.error || 'Coś poszło nie tak.');
+		} finally {
+			setLoading(false);
 		}
 	};
 	const onRegisterSubmit = async (data) => {
+		setLoading(true);
 		try {
 			const response = await axios.post(
 				`${import.meta.env.VITE_BACKEND_URL}/auth/register`,
@@ -46,6 +50,8 @@ const LoginPopup = ({ isOpen, onClose }) => {
 			reset();
 		} catch (error) {
 			toast.error(error.response?.data?.error || 'Coś poszło nie tak.');
+		} finally {
+			setLoading(false);
 		}
 	};
 
@@ -59,7 +65,7 @@ const LoginPopup = ({ isOpen, onClose }) => {
 		>
 			<div
 				onClick={(e) => e.stopPropagation()}
-				className='bg-main rounded-lg shadow-lg p-6 w-9/10 border-2 border-cta flex flex-col items-center gap-5 max-w-md'
+				className='relative bg-main rounded-lg shadow-lg p-6 w-9/10 border-2 border-cta flex flex-col items-center gap-5 max-w-md'
 			>
 				<button
 					onClick={onClose}
@@ -101,7 +107,7 @@ const LoginPopup = ({ isOpen, onClose }) => {
 				{isLoging ? (
 					<form
 						onSubmit={handleSubmit(onLoginSubmit)}
-						className='flex flex-col gap-5'
+						className='relative flex flex-col gap-5'
 						noValidate
 					>
 						<div>
@@ -147,7 +153,7 @@ const LoginPopup = ({ isOpen, onClose }) => {
 				) : (
 					<form
 						onSubmit={handleSubmit(onRegisterSubmit)}
-						className='flex flex-col gap-5'
+						className='relative flex flex-col gap-5'
 						noValidate
 					>
 						<div>
@@ -228,6 +234,11 @@ const LoginPopup = ({ isOpen, onClose }) => {
 							Zarejestruj się
 						</button>
 					</form>
+				)}
+				{loading && (
+					<div className='absolute flex items-center justify-center w-full h-full top-0 backdrop-blur-[2px]'>
+						<div className='w-6 h-6 border-4 border-cta border-t-transparent rounded-full animate-spin'></div>
+					</div>
 				)}
 			</div>
 		</div>

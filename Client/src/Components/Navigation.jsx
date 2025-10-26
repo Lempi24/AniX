@@ -89,7 +89,9 @@ const Navigation = ({ onLoginClick }) => {
 						</NavLink>
 					</li>
 					<li>
-						{!loading && isAuthenticated ? (
+						{loading ? (
+							<div className='w-10 h-10 rounded-full border-2 bg-main  animate-pulse'></div>
+						) : isAuthenticated ? (
 							<button
 								onClick={() => setIsUserMenuOpen((prev) => !prev)}
 								className='w-10 overflow-hidden rounded-full cursor-pointer'
@@ -101,7 +103,10 @@ const Navigation = ({ onLoginClick }) => {
 								/>
 							</button>
 						) : (
-							<button onClick={onLoginClick} className='cursor-pointer'>
+							<button
+								onClick={onLoginClick}
+								className='border-2 border-cta p-2 rounded-lg cursor-pointer transition-colors hover:bg-cta hover:text-main'
+							>
 								Logowanie
 							</button>
 						)}

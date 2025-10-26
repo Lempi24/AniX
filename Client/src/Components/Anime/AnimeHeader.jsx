@@ -1,5 +1,7 @@
-import { useState } from 'react';
-
+import { useState, useEffect } from 'react';
+import useClickOutside from '../../hooks/useClickOutside';
+import { useAuth } from '../../Context/AuthContext';
+import axios from 'axios';
 const AnimeHeader = ({
 	image_url,
 	title,
@@ -8,10 +10,13 @@ const AnimeHeader = ({
 	episodes,
 	status,
 	year,
+	id,
 	watchNow,
 	handleTrailerState,
 }) => {
+	const { isAuthenticated } = useAuth();
 	const [isDropdownOpen, setIsDropDownOpen] = useState(false);
+	const statusRef = useClickOutside(() => setIsDropDownOpen(false));
 	const statusTranslate = {
 		'Finished Airing': 'Zakończony',
 		'Currently Airing': 'Emitowane',
@@ -22,10 +27,77 @@ const AnimeHeader = ({
 		{ key: 'planned', label: 'Planuję', color: 'hover:bg-yellow-400' },
 		{ key: 'on_hold', label: 'Wstrzymane', color: 'hover:bg-orange-400' },
 		{ key: 'dropped', label: 'Porzucone', color: 'hover:bg-red-400' },
+		{ key: 'none', label: 'Usuń z list' },
 	];
 	const [hovered, setHovered] = useState(0);
 	const stars = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 	const [selectedScore, setSelectedScore] = useState(0);
+	const [userSelectedAnimeData, setUserSelectedAnimeData] = useState({});
+	const [isStatusLoading, setIsStatusLoading] = useState(true);
+	const currentStatus = statuses.find(
+		(status) => status.key === userSelectedAnimeData.status
+	);
+	const getUserAnimeProfile = async (id) => {
+		setIsDropDownOpen(false);
+		try {
+			const token = localStorage.getItem('token');
+			if (!token) {
+				setIsStatusLoading(false);
+				return;
+			}
+			const response = await axios.get(
+				`${import.meta.env.VITE_BACKEND_URL}/user/fetch-user-anime-profile`,
+				{
+					headers: { Authorization: `Bearer ${token}` },
+					params: {
+						id,
+					},
+				}
+			);
+			setUserSelectedAnimeData(response.data || {});
+		} catch (error) {
+			console.error('Failed to fetch data:', error);
+		} finally {
+			setIsStatusLoading(false);
+		}
+	};
+	const handleStatusChange = async (status) => {
+		setIsDropDownOpen(false);
+		setIsStatusLoading(true);
+		try {
+			const token = localStorage.getItem('token');
+			if (!token) return console.error('No auth token found');
+			await axios.put(
+				`${import.meta.env.VITE_BACKEND_URL}/user/anime-status`,
+				{ status, id },
+				{
+					headers: { Authorization: `Bearer ${token}` },
+				}
+			);
+			if (status !== 'none') {
+				setUserSelectedAnimeData((prev) => ({
+					...prev,
+					status: status,
+				}));
+			} else {
+				setUserSelectedAnimeData({});
+			}
+		} catch (error) {
+			console.error('Failed to update status:', error);
+		} finally {
+			setIsStatusLoading(false);
+		}
+	};
+	useEffect(() => {
+		setIsStatusLoading(true);
+
+		if (isAuthenticated && id) {
+			getUserAnimeProfile(id);
+		} else {
+			setIsStatusLoading(false);
+			setUserSelectedAnimeData({});
+		}
+	}, [id, isAuthenticated]);
 	const starIcon =
 		'M341.5 45.1C337.4 37.1 329.1 32 320.1 32C311.1 32 302.8 37.1 298.7 45.1L225.1 189.3L65.2 214.7C56.3 216.1 48.9 222.4 46.1 231C43.3 239.6 45.6 249 51.9 255.4L166.3 369.9L141.1 529.8C139.7 538.7 143.4 547.7 150.7 553C158 558.3 167.6 559.1 175.7 555L320.1 481.6L464.4 555C472.4 559.1 482.1 558.3 489.4 553C496.7 547.7 500.4 538.8 499 529.8L473.7 369.9L588.1 255.4C594.5 249 596.7 239.6 593.9 231C591.1 222.4 583.8 216.1 574.8 214.7L415 189.3L341.5 45.1z';
 	const playIcon =
@@ -139,26 +211,56 @@ const AnimeHeader = ({
 					<div className='relative w-full'>
 						<button
 							onClick={() => setIsDropDownOpen((prev) => !prev)}
-							className='w-full border-2 border-cta rounded-xl p-2 cursor-pointer hover:bg-cta/20 transition-colors duration-300'
+							className={`w-full border-2 rounded-xl p-2 transition-colors duration-300 flex items-center justify-center ${
+								isAuthenticated
+									? `border-cta ${currentStatus?.color} cursor-pointer`
+									: 'border-secondary text-secondary cursor-not-allowed'
+							}`}
+							disabled={isStatusLoading}
 						>
-							Dodaj do listy
+							<span className={isStatusLoading ? 'invisible' : ''}>
+								{currentStatus?.label || 'Dodaj do listy'}
+							</span>
+
+							{isStatusLoading && (
+								<div className='absolute flex items-center justify-center inset-0'>
+									<div className='w-6 h-6 border-4 border-cta border-t-transparent rounded-full animate-spin'></div>
+								</div>
+							)}
 						</button>
-						{isDropdownOpen && (
-							<div className='absolute border-2 bg-main border-cta w-full p-2 rounded-xl'>
+						{isDropdownOpen && isAuthenticated && (
+							<div
+								ref={statusRef}
+								className='absolute border-2 bg-main border-cta w-full p-2 rounded-xl'
+							>
 								<ul className='text-center space-y-2'>
-									{statuses.map((status) => (
-										<li
-											key={status.key}
-											className={` ${status.color} hover:text-main border-l-3 border-transparent  cursor-pointer p-1 transition-colors duration-200 ease-in-out`}
-										>
-											{status.label}
-										</li>
-									))}
+									{statuses
+										.filter(
+											(s) =>
+												s.key !== 'none' ||
+												(userSelectedAnimeData.status &&
+													userSelectedAnimeData.status !== 'none')
+										)
+										.map((status) => (
+											<li
+												onClick={() => handleStatusChange(status.key)}
+												key={status.key}
+												className={`${status.color} hover:text-main border-l-3 border-transparent cursor-pointer p-1 transition-colors duration-200 ease-in-out`}
+											>
+												{status.label}
+											</li>
+										))}
 								</ul>
 							</div>
 						)}
 					</div>
-					<button className='w-full border-2 border-cta rounded-xl p-2 cursor-pointer hover:bg-cta/20 transition-colors duration-300'>
+					<button
+						className={`w-full border-2  rounded-xl p-2  transition-colors duration-300 ${
+							isAuthenticated
+								? 'border-cta hover:bg-cta/20 cursor-pointer'
+								: 'border-secondary text-secondary cursor-not-allowed'
+						}`}
+					>
 						Ulubione
 					</button>
 				</div>

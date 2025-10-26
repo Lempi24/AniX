@@ -1,5 +1,4 @@
 import { useLocation, Link, useParams, useNavigate } from 'react-router-dom';
-import Navigation from '../Components/Navigation';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import AnimeHeader from '../Components/Anime/AnimeHeader';
@@ -20,7 +19,6 @@ const AnimeDetails = () => {
 		spring: 'Wiosna',
 		fall: 'Jesień',
 	};
-
 	const genresTranslate = {
 		Action: 'Akcja',
 		Romance: 'Romans',
@@ -79,7 +77,6 @@ const AnimeDetails = () => {
 	if (loading) {
 		return (
 			<>
-				
 				<AnimeDetailsSkeleton />
 			</>
 		);
@@ -87,7 +84,6 @@ const AnimeDetails = () => {
 	if (!animeData) {
 		return (
 			<div>
-				
 				<h1>Nie znaleziono danych anime!</h1>
 			</div>
 		);
@@ -98,7 +94,6 @@ const AnimeDetails = () => {
 
 	return (
 		<div className='pb-10'>
-			
 			{animeData && <Breadcrumbs animeId={animeId} title={animeData.title} />}
 			<div className='relative flex flex-col items-center gap-10 mt-10 max-w-7xl mx-auto px-4'>
 				<AnimeHeader
@@ -109,6 +104,7 @@ const AnimeDetails = () => {
 					episodes={animeData.episodes}
 					status={animeData.status}
 					year={animeData.year}
+					id={animeData.mal_id}
 					watchNow={() => handleEpisodeClick(1)}
 					handleTrailerState={() => setIsTrailerOpen(true)}
 				/>

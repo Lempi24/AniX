@@ -364,6 +364,70 @@ app.get('/anime/:id/episodes', async (req, res) => {
 		res.status(500).json({ error: 'Wystąpił błąd serwera.' });
 	}
 });
+app.put('/user/anime-status', authenticateToken, async (req, res) => {
+	const { id, status } = req.body;
+	const userId = req.user.userId;
+	if (!id || !status) {
+		return res.status(400).json({ message: 'Brakuje danych' });
+	}
+
+	try {
+		const userResult = await pool.query('SELECT * FROM users WHERE id = $1', [
+			userId,
+		]);
+		if (userResult.rows.length === 0) {
+			return res.status(404).json({ error: 'Użytkownik nie istnieje' });
+		}
+
+		const animeResult = await pool.query(
+			'SELECT * FROM anime WHERE mal_id = $1',
+			[id]
+		);
+		if (animeResult.rows.length === 0) {
+			return res.status(404).json({ error: 'Anime nie istnieje' });
+		}
+		if (!status || status === 'none') {
+			await pool.query(
+				'DELETE FROM user_anime_library WHERE user_id = $1 AND anime_id = $2',
+				[userId, id]
+			);
+			return res.status(200).json({ message: 'Anime usunięte z listy' });
+		}
+		await pool.query(
+			`INSERT INTO user_anime_library (user_id, anime_id, status, is_favorite, user_score)
+             VALUES ($1, $2, $3, false, 0)
+             ON CONFLICT (user_id, anime_id)
+             DO UPDATE SET status = EXCLUDED.status`,
+			[userId, id, status]
+		);
+
+		res.status(200).json({ message: `Status zmieniony na: ${status}` });
+	} catch (err) {
+		console.error(err);
+		res.status(500).json({ message: 'Błąd servera' });
+	}
+});
+app.get(
+	'/user/fetch-user-anime-profile',
+	authenticateToken,
+	async (req, res) => {
+		const { id } = req.query;
+		const userId = req.user.userId;
+		try {
+			const userAnimeData = await pool.query(
+				'SELECT * FROM user_anime_library WHERE user_id = $1 AND anime_id = $2',
+				[userId, id]
+			);
+			if (userAnimeData.rows.length === 0) {
+				return res.status(404).json({ error: 'Nie zaleziono danych' });
+			}
+			res.json(userAnimeData.rows[0]);
+		} catch (error) {
+			console.error('Nie pobrano danych:', error);
+			res.status(500).json({ message: 'Błąd servera' });
+		}
+	}
+);
 app.get('/', (req, res) => {
 	res.send('Backend działa ✅');
 });

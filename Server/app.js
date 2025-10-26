@@ -60,6 +60,22 @@ app.get('/auth/verify', authenticateToken, async (req, res) => {
 		res.status(500).json({ error: 'Błąd serwera' });
 	}
 });
+async function validateUserAndAnime(userId, animeId) {
+	const userResult = await pool.query('SELECT * FROM users WHERE id = $1', [
+		userId,
+	]);
+	if (userResult.rows.length === 0)
+		throw { status: 404, message: 'Użytkownik nie istnieje' };
+
+	const animeResult = await pool.query(
+		'SELECT * FROM anime WHERE mal_id = $1',
+		[animeId]
+	);
+	if (animeResult.rows.length === 0)
+		throw { status: 404, message: 'Anime nie istnieje' };
+
+	return { user: userResult.rows[0], anime: animeResult.rows[0] };
+}
 
 function authenticateToken(req, res, next) {
 	const authHeader = req.headers['authorization'];
@@ -405,6 +421,57 @@ app.put('/user/anime-status', authenticateToken, async (req, res) => {
 	} catch (err) {
 		console.error(err);
 		res.status(500).json({ message: 'Błąd servera' });
+	}
+});
+app.put('/user/anime-status/favorite', authenticateToken, async (req, res) => {
+	const { isFavorite, id } = req.body;
+	const userId = req.user.userId;
+	if (!id || typeof isFavorite !== 'boolean') {
+		return res.status(400).json({ message: 'Brakuje danych' });
+	}
+	try {
+		await validateUserAndAnime(userId, id);
+
+		await pool.query(
+			`INSERT INTO user_anime_library (user_id, anime_id, status, is_favorite, user_score)
+       VALUES ($1, $2, '', $3, 0)
+       ON CONFLICT (user_id, anime_id)
+       DO UPDATE SET is_favorite = EXCLUDED.is_favorite`,
+			[userId, id, isFavorite]
+		);
+		res.status(200).json({
+			message: isFavorite ? 'Dodano do ulubionych' : 'Usunięto z ulubionych',
+		});
+	} catch (err) {
+		console.error(err);
+		res
+			.status(err.status || 500)
+			.json({ message: err.message || 'Błąd servera' });
+	}
+});
+app.put('/user/anime-score', authenticateToken, async (req, res) => {
+	const { id, score } = req.body;
+	const userId = req.user.userId;
+	if (!id || score === undefined || score === null) {
+		return res.status(400).json({ message: 'Brakuje danych' });
+	}
+
+	try {
+		await validateUserAndAnime(userId, id);
+
+		await pool.query(
+			`
+            INSERT INTO user_anime_library (user_id, anime_id, status, is_favorite, user_score)
+            VALUES ($1, $2, '', false, $3)
+            ON CONFLICT (user_id, anime_id)
+            DO UPDATE SET user_score = EXCLUDED.user_score
+        `,
+			[userId, id, score]
+		);
+		res.status(200).json({ message: `Ocena ustawiona na ${score}` });
+	} catch (err) {
+		console.error(err);
+		res.status(500).json({ message: 'Błąd serwera' });
 	}
 });
 app.get(

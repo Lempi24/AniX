@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import useClickOutside from '../../hooks/useClickOutside';
 import { useAuth } from '../../Context/AuthContext';
 import axios from 'axios';
+import toast from 'react-hot-toast';
 const AnimeHeader = ({
 	image_url,
 	title,
@@ -34,6 +35,7 @@ const AnimeHeader = ({
 	const [selectedScore, setSelectedScore] = useState(0);
 	const [userSelectedAnimeData, setUserSelectedAnimeData] = useState({});
 	const [isStatusLoading, setIsStatusLoading] = useState(true);
+	const [isFavoriteLoading, setIsFavoriteLoading] = useState(false);
 	const currentStatus = statuses.find(
 		(status) => status.key === userSelectedAnimeData.status
 	);
@@ -55,8 +57,10 @@ const AnimeHeader = ({
 				}
 			);
 			setUserSelectedAnimeData(response.data || {});
+			setSelectedScore(response.data.user_score || 0);
 		} catch (error) {
 			console.error('Failed to fetch data:', error);
+			setSelectedScore(0);
 		} finally {
 			setIsStatusLoading(false);
 		}
@@ -86,6 +90,53 @@ const AnimeHeader = ({
 			console.error('Failed to update status:', error);
 		} finally {
 			setIsStatusLoading(false);
+		}
+	};
+	const handleFavoriteChange = async () => {
+		if (!userSelectedAnimeData.status) {
+			toast.error('Ustaw status, aby dodać do ulubionych');
+			return;
+		}
+		setIsFavoriteLoading(true);
+		try {
+			const token = localStorage.getItem('token');
+			if (!token) return console.error('No auth token found');
+
+			const newFavorite = !userSelectedAnimeData.is_favorite;
+
+			await axios.put(
+				`${import.meta.env.VITE_BACKEND_URL}/user/anime-status/favorite`,
+				{ id, isFavorite: newFavorite },
+				{ headers: { Authorization: `Bearer ${token}` } }
+			);
+
+			setUserSelectedAnimeData((prev) => ({
+				...prev,
+				is_favorite: newFavorite,
+			}));
+		} catch (error) {
+			console.error('Failed to update favorite:', error);
+		} finally {
+			setIsFavoriteLoading(false);
+		}
+	};
+	const handleScoreChange = async () => {
+		try {
+			const token = localStorage.getItem('token');
+			if (!token) return console.error('No auth token found');
+
+			const response = await axios.put(
+				`${import.meta.env.VITE_BACKEND_URL}/user/anime-score`,
+				{ id, score: selectedScore },
+				{ headers: { Authorization: `Bearer ${token}` } }
+			);
+			setUserSelectedAnimeData((prev) => ({
+				...prev,
+				score: selectedScore,
+			}));
+			toast.success(response.data.message);
+		} catch (error) {
+			console.error('Failed to update score:', error);
 		}
 	};
 	useEffect(() => {
@@ -161,46 +212,54 @@ const AnimeHeader = ({
 						<p className='font-bold text-lg'>{year || 'N/A'}</p>
 					</div>
 				</div>
-				<div className='w-full space-y-5'>
-					<div className='border-2 border-cta rounded-md p-5 w-full mt-5 space-y-5 lg:mt-0'>
-						<p className='border-b-2 border-cta text-xl pb-3'>Twoja ocena</p>
-						<div className='flex items-center gap-2 mt-5'>
-							{stars.map((num) => (
-								<div>
-									<svg
-										xmlns='http://www.w3.org/2000/svg'
-										viewBox='0 0 640 640'
-										onMouseEnter={() => setHovered(num)}
-										onMouseLeave={() => setHovered(0)}
-										onClick={() => setSelectedScore(num)}
-										className={` stroke-star stroke-30 w-[20px] lg:w-[30px] transition-colors cursor-pointer ${
-											hovered >= num || (!hovered && selectedScore >= num)
-												? 'fill-star'
-												: 'fill-transparent'
-										}`}
-									>
-										<path d={starIcon} />
-									</svg>
-								</div>
-							))}
-							<span className='ml-1 lg:ml-10 text-star text-xl'>
-								{selectedScore
-									? `${selectedScore}/${stars.length}`
-									: hovered
-									? `${hovered}/${stars.length}`
-									: '-'}
-							</span>
-						</div>
-						<div className='flex gap-3'>
-							<button className='bg-cta w-full p-2 rounded-xl cursor-pointer'>
-								Zapisz ocenę
-							</button>
-							<button className='border-2 border-cta w-full p-2 rounded-xl cursor-pointer'>
-								Wyczyść
-							</button>
+				{isAuthenticated && (
+					<div className='w-full space-y-5'>
+						<div className='border-2 border-cta rounded-md p-5 w-full mt-5 space-y-5 lg:mt-0'>
+							<p className='border-b-2 border-cta text-xl pb-3'>Twoja ocena</p>
+							<div className='flex items-center gap-2 mt-5'>
+								{stars.map((num) => (
+									<div>
+										<svg
+											xmlns='http://www.w3.org/2000/svg'
+											viewBox='0 0 640 640'
+											onMouseEnter={() => setHovered(num)}
+											onMouseLeave={() => setHovered(0)}
+											onClick={() => setSelectedScore(num)}
+											className={` stroke-star stroke-30 w-[20px] lg:w-[30px] transition-colors cursor-pointer ${
+												hovered >= num || (!hovered && selectedScore >= num)
+													? 'fill-star'
+													: 'fill-transparent'
+											}`}
+										>
+											<path d={starIcon} />
+										</svg>
+									</div>
+								))}
+								<span className='ml-1 lg:ml-10 text-star text-xl'>
+									{selectedScore
+										? `${selectedScore}/${stars.length}`
+										: hovered
+										? `${hovered}/${stars.length}`
+										: '-'}
+								</span>
+							</div>
+							<div className='flex gap-3'>
+								<button
+									onClick={() => handleScoreChange()}
+									className='bg-cta w-full p-2 rounded-xl cursor-pointer'
+								>
+									Zapisz ocenę
+								</button>
+								<button
+									onClick={() => setSelectedScore(0)}
+									className='border-2 border-cta w-full p-2 rounded-xl cursor-pointer'
+								>
+									Wyczyść
+								</button>
+							</div>
 						</div>
 					</div>
-				</div>
+				)}
 				<div className='flex flex-col lg:flex-row items-center gap-3'>
 					<button
 						onClick={watchNow}
@@ -255,13 +314,24 @@ const AnimeHeader = ({
 						)}
 					</div>
 					<button
-						className={`w-full border-2  rounded-xl p-2  transition-colors duration-300 ${
+						onClick={handleFavoriteChange}
+						className={`w-full border-2 rounded-xl p-2 transition-colors duration-300 flex items-center justify-center ${
+							userSelectedAnimeData.is_favorite ? 'bg-cta' : ''
+						} ${
 							isAuthenticated
 								? 'border-cta hover:bg-cta/20 cursor-pointer'
 								: 'border-secondary text-secondary cursor-not-allowed'
 						}`}
+						disabled={isFavoriteLoading}
 					>
-						Ulubione
+						<span className={isFavoriteLoading ? 'invisible' : ''}>
+							Ulubione
+						</span>
+						{isFavoriteLoading && (
+							<div className='absolute flex items-center justify-center'>
+								<div className='w-6 h-6 border-4 border-cta border-t-transparent rounded-full animate-spin'></div>
+							</div>
+						)}
 					</button>
 				</div>
 			</div>

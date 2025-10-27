@@ -143,12 +143,23 @@ const LoginPopup = ({ isOpen, onClose }) => {
 							)}
 						</div>
 						<button className='ml-auto text-sm'>Zapomniałeś hasła?</button>
-						<button
-							type='submit'
-							className='bg-cta p-3 rounded-xl font-bold cursor-pointer'
-						>
-							Zaloguj się
-						</button>
+						<div className='relative w-full'>
+							<button
+								type='submit'
+								className={`w-full  p-3 rounded-xl font-bold cursor-pointer ${
+									loading ? 'border-2 border-cta pointer-events-none' : 'bg-cta'
+								}`}
+							>
+								<span className={`${loading ? 'invisible' : ''}`}>
+									Zaloguj się
+								</span>
+								{loading && (
+									<div className='absolute flex items-center justify-center inset-0'>
+										<div className='w-6 h-6 border-4 border-cta border-t-transparent rounded-full animate-spin'></div>
+									</div>
+								)}
+							</button>
+						</div>
 					</form>
 				) : (
 					<form
@@ -227,18 +238,24 @@ const LoginPopup = ({ isOpen, onClose }) => {
 								</p>
 							)}
 						</div>
-						<button
-							type='submit'
-							className='bg-cta p-3 rounded-xl font-bold cursor-pointer'
-						>
-							Zarejestruj się
-						</button>
+						<div className='relative w-full'>
+							<button
+								type='submit'
+								className={`w-full p-3 rounded-xl font-bold cursor-pointer ${
+									loading ? 'border-2 border-cta pointer-events-none' : 'bg-cta'
+								}`}
+							>
+								<span className={`${loading ? 'invisible' : ''}`}>
+									Zarejestruj się
+								</span>
+								{loading && (
+									<div className='absolute flex items-center justify-center inset-0'>
+										<div className='w-6 h-6 border-4 border-cta border-t-transparent rounded-full animate-spin'></div>
+									</div>
+								)}
+							</button>
+						</div>
 					</form>
-				)}
-				{loading && (
-					<div className='absolute flex items-center justify-center w-full h-full top-0 backdrop-blur-[2px]'>
-						<div className='w-6 h-6 border-4 border-cta border-t-transparent rounded-full animate-spin'></div>
-					</div>
 				)}
 			</div>
 		</div>

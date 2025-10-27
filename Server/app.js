@@ -378,8 +378,14 @@ app.get('/anime/:id', async (req, res) => {
 app.get('/anime/:id/episodes', async (req, res) => {
 	try {
 		const { id } = req.params;
-		const query =
-			'SELECT * FROM episodes WHERE anime_id = $1 ORDER BY episode_number ASC';
+		const query = `
+			SELECT 
+				*, 
+				(NOW() - created_at <= interval '7 days') AS is_new
+			FROM episodes 
+			WHERE anime_id = $1 
+			ORDER BY episode_number ASC
+		`;
 		const result = await pool.query(query, [id]);
 
 		res.json(result.rows);

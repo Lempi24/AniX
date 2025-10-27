@@ -5,7 +5,6 @@ import axios from 'axios';
 import Breadcrumbs from '../Components/Breadcrumbs';
 import { useAuth } from '../Context/AuthContext';
 import PlayerPageSkeleton from '../Components/PlayerPageSkeleton';
-import toast from 'react-hot-toast';
 const PlayerPage = () => {
 	const { isAuthenticated } = useAuth();
 	const location = useLocation();
@@ -61,11 +60,13 @@ const PlayerPage = () => {
 				const response = await axios.get(
 					`${import.meta.env.VITE_BACKEND_URL}/anime/${animeId}/episodes`
 				);
+				console.log(response.data);
 				setAnimeEpisodesData(response.data);
 			} catch (err) {
 				console.error('Error fetching episodes list:', err);
 			}
 		};
+
 		const fetchUserEpisodeData = async () => {
 			const token = localStorage.getItem('token');
 			if (!token) {
@@ -192,8 +193,12 @@ const PlayerPage = () => {
 					<div className='border-2 border-cta rounded-md p-5 w-full custom-scroll'>
 						<p className='border-b-2 border-cta text-xl pb-3'>Lista odcinków</p>
 						<div className='flex flex-col mt-3 max-h-[300px] overflow-auto gap-2 pr-2 custom-scroll'>
-							{Array.from({ length: totalEpisodes }, (_, i) => i + 1).map(
-								(epNum) => (
+							{Array.from({ length: totalEpisodes }, (_, i) => {
+								const epNum = i + 1;
+								const episodeData = animeEpisodesData.find(
+									(ep) => ep.episode_number === epNum
+								);
+								return (
 									<div className='relative w-full'>
 										<button
 											key={epNum}
@@ -209,6 +214,11 @@ const PlayerPage = () => {
 											>
 												Odcinek {epNum}
 											</p>
+											{episodeData?.is_new && (
+												<span className='absolute top-1 right-1 text-[.8rem] bg-cta text-white px-1.5 py-0.5 rounded-full uppercase'>
+													Nowy
+												</span>
+											)}
 										</button>
 										{isAuthenticated && (
 											<input
@@ -225,8 +235,8 @@ const PlayerPage = () => {
 											/>
 										)}
 									</div>
-								)
-							)}
+								);
+							})}
 						</div>
 					</div>
 					{hasChanges && (
@@ -235,7 +245,9 @@ const PlayerPage = () => {
 								handleSaveEpisodes();
 							}}
 							className={`relative mt-3 border-2 border-cta font-semibold py-2 px-4 rounded-md hover:bg-cta/20 hover:text-cta transition-colors ${
-								isEpisodeSaving ? 'cursor-not-allowed' : 'cursor-pointer'
+								isEpisodeSaving
+									? 'cursor-not-allowed pointer-events-none'
+									: 'cursor-pointer'
 							} `}
 							disabled={isEpisodeSaving}
 						>

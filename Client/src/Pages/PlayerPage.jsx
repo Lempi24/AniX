@@ -164,7 +164,7 @@ const PlayerPage = () => {
 			</div>
 		);
 	}
-
+	console.log(animeData);
 	return (
 		<div>
 			<Breadcrumbs
@@ -183,7 +183,7 @@ const PlayerPage = () => {
 						<div>
 							<h2 className='font-bold text-lg'>{animeData.title}</h2>
 							<div className='text-sm text-accent'>
-								<p>Ocena: N/A</p>
+								<p>Ocena: {animeData.score || '0.00'}</p>
 								<p>Odcinki: {totalEpisodes}</p>
 								<p>Status: {statusTranslate[animeData.status] || 'N/A'}</p>
 								<p>Rok: {animeData.year}</p>

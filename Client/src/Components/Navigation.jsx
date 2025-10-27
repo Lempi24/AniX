@@ -1,5 +1,5 @@
 import { useNavigate, NavLink } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Dropdown from './Dropdown';
 import axios from 'axios';
 import { useAuth } from '../Context/AuthContext';
@@ -12,10 +12,13 @@ const Navigation = ({ onLoginClick }) => {
 	const [results, setResults] = useState([]);
 	const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 	const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+	const userMenuButtonRef = useRef();
 	const [isMobileUserMenuOpen, setIsMobileUserMenuOpen] = useState(false);
-	const userMenuRef = useClickOutside(() => setIsUserMenuOpen(false));
 	const dropdownRef = useClickOutside(() => setResults([]));
-	const mobileMenuRef = useClickOutside(() => setIsMobileMenuOpen(false));
+	const userMenuRef = useClickOutside(
+		() => setIsUserMenuOpen(false),
+		[userMenuButtonRef]
+	);
 
 	useEffect(() => {
 		if (searchTerm.trim() === '') {
@@ -93,6 +96,7 @@ const Navigation = ({ onLoginClick }) => {
 							<div className='w-10 h-10 rounded-full border-2 bg-main  animate-pulse'></div>
 						) : isAuthenticated ? (
 							<button
+								ref={userMenuButtonRef}
 								onClick={() => setIsUserMenuOpen((prev) => !prev)}
 								className='w-10 overflow-hidden rounded-full cursor-pointer'
 							>
@@ -153,7 +157,7 @@ const Navigation = ({ onLoginClick }) => {
 				</div>
 			)}
 			{isMobileMenuOpen && (
-				<div ref={mobileMenuRef}>
+				<div>
 					<ul className='lg:hidden absolute w-full bg-secondary border-b-3 border-cta p-4 space-y-4 z-10'>
 						{user && (
 							<div

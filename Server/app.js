@@ -482,7 +482,8 @@ app.put('/user/anime-score', authenticateToken, async (req, res) => {
             SET score = (
                 SELECT AVG(user_score)::numeric(3,2)
                 FROM user_anime_library
-                WHERE anime_id = $1 AND user_score IS NOT NULL
+                WHERE anime_id = $1 AND user_score IS NOT NULL AND user_score > 0
+
             )
             WHERE anime.mal_id = $1
             `,

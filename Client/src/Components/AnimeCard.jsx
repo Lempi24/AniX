@@ -23,7 +23,7 @@ const AnimeCard = ({ title, imageUrl, episodes, score }) => {
 						>
 							<path d={starIcon} />
 						</svg>
-						<p className='text-star'>{score ? score : 'N/A'}</p>
+						<p className='text-star'>{score ? score : '0.00'}</p>
 					</div>
 				</div>
 			</div>

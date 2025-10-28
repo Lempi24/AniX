@@ -8,6 +8,11 @@ import Anime from './Pages/Anime';
 import ScrollToTop from './Components/ScrollToTop';
 import LoginPopup from './Components/LogInPopup';
 import { Toaster } from 'react-hot-toast';
+import Footer from './Pages/Footer';
+import Dmca from './Pages/Dmca';
+import PrivacyPolicy from './Pages/PrivacyPolicy';
+import TermsOfService from './Pages/TermsOfService';
+import ContactPage from './Pages/ContactPage';
 function App() {
 	const [isLoginOpen, setIsLoginOpen] = useState(false);
 	return (
@@ -22,6 +27,10 @@ function App() {
 				/>
 				<Route path='/watch/:animeId/:episodeNumber' element={<PlayerPage />} />
 				<Route path='/anime' element={<Anime />} />
+				<Route path='/dmca' element={<Dmca />} />
+				<Route path='/privacy-policy' element={<PrivacyPolicy />} />
+				<Route path='/terms-of-service' element={<TermsOfService />} />
+				<Route path='/contact' element={<ContactPage />} />
 			</Routes>
 			<Toaster
 				position='top-center'
@@ -40,6 +49,7 @@ function App() {
 					error: {},
 				}}
 			/>
+			<Footer />
 			<LoginPopup isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} />
 		</BrowserRouter>
 	);

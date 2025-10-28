@@ -116,7 +116,7 @@ const PlayerPage = () => {
 		};
 
 		fetchAllData();
-	}, [animeId, isAuthenticated]);
+	}, [animeId, isAuthenticated, loading]);
 	useEffect(() => {
 		if (animeEpisodesData && animeEpisodesData.length > 0) {
 			const foundEpisode = animeEpisodesData.find(

@@ -229,7 +229,7 @@ const AnimeHeader = ({
 											onMouseEnter={() => setHovered(num)}
 											onMouseLeave={() => setHovered(0)}
 											onClick={() => setSelectedScore(num)}
-											className={` stroke-star stroke-30 w-[20px] lg:w-[30px] transition-colors cursor-pointer ${
+											className={` stroke-star stroke-30 w-[15px] lg:w-[30px] transition-colors cursor-pointer ${
 												hovered >= num || (!hovered && selectedScore >= num)
 													? 'fill-star'
 													: 'fill-transparent'

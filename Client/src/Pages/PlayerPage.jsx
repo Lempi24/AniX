@@ -5,20 +5,19 @@ import axios from 'axios';
 import Breadcrumbs from '../Components/Breadcrumbs';
 import { useAuth } from '../Context/AuthContext';
 import PlayerPageSkeleton from '../Components/PlayerPageSkeleton';
+import toast from 'react-hot-toast';
 const PlayerPage = () => {
-	const { isAuthenticated } = useAuth();
+	const { isAuthenticated, loading } = useAuth();
 	const location = useLocation();
 	const navigate = useNavigate();
 	const [isInfoPopupVisible, setIsInfoPopupVisible] = useState(false);
 	const popupLocalStorageKey = 'adblockInfoDismissed';
-	const [animeData, setAnimeData] = useState(location.state?.animeData || null);
+	const [animeData, setAnimeData] = useState(null);
 	const { animeId, episodeNumber } = useParams();
 	const [selectedPlayerUrl, setSelectedPlayerUrl] = useState(null);
 	const [currentEpisode, setCurrentEpisode] = useState(null);
-	const [loading, setLoading] = useState(true);
-	const [animeEpisodesData, setAnimeEpisodesData] = useState(
-		location.state?.animeData || null
-	);
+	const [pageLoading, setPageLoading] = useState(true);
+	const [animeEpisodesData, setAnimeEpisodesData] = useState(null);
 	const totalEpisodes = animeData?.episodes;
 	const [watchedEpisodes, setWatchedEpisodes] = useState({});
 	const [hasChanges, setHasChanges] = useState(false);
@@ -41,26 +40,36 @@ const PlayerPage = () => {
 		}
 	}, []);
 	useEffect(() => {
-		setLoading(true);
+		if (loading) return;
+		setPageLoading(true);
 		const fetchAnimeDetails = async () => {
-			if (!animeData) {
-				try {
-					const response = await axios.get(
-						`${import.meta.env.VITE_BACKEND_URL}/anime/${animeId}`
-					);
-					setAnimeData(response.data);
-				} catch (err) {
-					console.error('Error fetching anime details:', err);
+			try {
+				const response = await axios.get(
+					`${import.meta.env.VITE_BACKEND_URL}/anime/${animeId}`
+				);
+				setAnimeData(response.data);
+
+				if (response.data.is_protected && !isAuthenticated) {
+					toast.error('Musisz być zalogowany, aby zobaczyć tę stronę.');
+					navigate('/');
+					return;
 				}
+			} catch (err) {
+				console.error('Error fetching anime details:', err);
 			}
 		};
 
 		const fetchEpisodesList = async () => {
 			try {
+				const token = localStorage.getItem('token');
 				const response = await axios.get(
-					`${import.meta.env.VITE_BACKEND_URL}/anime/${animeId}/episodes`
+					`${import.meta.env.VITE_BACKEND_URL}/anime/${animeId}/episodes`,
+					{
+						headers: {
+							Authorization: `Bearer ${token}`,
+						},
+					}
 				);
-				console.log(response.data);
 				setAnimeEpisodesData(response.data);
 			} catch (err) {
 				console.error('Error fetching episodes list:', err);
@@ -102,12 +111,12 @@ const PlayerPage = () => {
 			} catch (error) {
 				console.error('Błąd podczas pobierania danych:', error);
 			} finally {
-				setLoading(false);
+				setPageLoading(false);
 			}
 		};
 
 		fetchAllData();
-	}, [animeId]);
+	}, [animeId, isAuthenticated]);
 	useEffect(() => {
 		if (animeEpisodesData && animeEpisodesData.length > 0) {
 			const foundEpisode = animeEpisodesData.find(
@@ -151,7 +160,7 @@ const PlayerPage = () => {
 	const popupMessage =
 		'Niektóre zewnętrzne odtwarzacze wideo mogą wyświetlać reklamy. Istnieją narzędzia przeglądarkowe pozwalające dostosować sposób wyświetlania treści.';
 
-	if (loading) {
+	if (pageLoading) {
 		return <PlayerPageSkeleton />;
 	}
 	if (!animeData) {

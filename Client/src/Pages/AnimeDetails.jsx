@@ -1,16 +1,21 @@
-import { useLocation, Link, useParams, useNavigate } from 'react-router-dom';
+import { useLocation, useParams, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import AnimeHeader from '../Components/Anime/AnimeHeader';
 import TrailerModal from '../Components/Anime/TrailerModal';
 import Breadcrumbs from '../Components/Breadcrumbs';
 import AnimeDetailsSkeleton from '../Components/Anime/AnimeDetailsSkeleton';
-const AnimeDetails = () => {
+import { useAuth } from '../Context/AuthContext';
+import toast from 'react-hot-toast';
+const AnimeDetails = ({ loginPopup }) => {
+	const { isAuthenticated } = useAuth();
 	const location = useLocation();
 	const navigate = useNavigate();
 	const { animeId } = useParams();
 	const [loading, setLoading] = useState(true);
 	const [animeData, setAnimeData] = useState(null);
+	const isProtected = animeData?.is_protected;
+	const canWatch = !isProtected || (isProtected && isAuthenticated);
 	const [animeRelations, setAnimeRelations] = useState(null);
 	const [isTrailerOpen, setIsTrailerOpen] = useState(false);
 	const seasonsTranslate = {
@@ -70,9 +75,12 @@ const AnimeDetails = () => {
 	}, [animeId]);
 
 	const handleEpisodeClick = (episodeNumber) => {
-		navigate(`/watch/${animeData.mal_id}/${episodeNumber}`, {
-			state: { animeData, episodeNumber },
-		});
+		if (canWatch) {
+			navigate(`/watch/${animeData.mal_id}/${episodeNumber}`);
+		} else {
+			toast.error('Musisz zalogować się, aby obejrzeć te anime');
+			loginPopup();
+		}
 	};
 	if (loading) {
 		return (
@@ -91,7 +99,6 @@ const AnimeDetails = () => {
 	const handleAnimeClick = (anime) => {
 		navigate(`/anime/${anime.mal_id}`);
 	};
-
 	return (
 		<div className='pb-10'>
 			{animeData && <Breadcrumbs animeId={animeId} title={animeData.title} />}

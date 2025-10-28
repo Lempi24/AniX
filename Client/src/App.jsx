@@ -16,7 +16,10 @@ function App() {
 			<Navigation onLoginClick={() => setIsLoginOpen(true)} />
 			<Routes>
 				<Route path='/' element={<Home />} />
-				<Route path='/anime/:animeId' element={<AnimeDetails />} />
+				<Route
+					path='/anime/:animeId'
+					element={<AnimeDetails loginPopup={() => setIsLoginOpen(true)} />}
+				/>
 				<Route path='/watch/:animeId/:episodeNumber' element={<PlayerPage />} />
 				<Route path='/anime' element={<Anime />} />
 			</Routes>

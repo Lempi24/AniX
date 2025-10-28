@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import pg from 'pg';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import { error } from 'console';
 dotenv.config();
 
 const app = express();
@@ -93,6 +94,18 @@ function authenticateToken(req, res, next) {
 		next();
 	});
 }
+const optionalAuthMiddleware = (req, res, next) => {
+	const authHeader = req.headers.authorization;
+	if (authHeader && authHeader.startsWith('Bearer ')) {
+		const token = authHeader.split(' ')[1];
+		try {
+			req.user = jwt.verify(token, process.env.JWT_SECRET);
+		} catch (e) {
+			req.user = null;
+		}
+	}
+	next();
+};
 app.post('/auth/login', async (req, res) => {
 	try {
 		const { username, password } = req.body;
@@ -375,9 +388,24 @@ app.get('/anime/:id', async (req, res) => {
 		res.status(500).json({ error: 'Wystąpił błąd serwera.' });
 	}
 });
-app.get('/anime/:id/episodes', async (req, res) => {
+app.get('/anime/:id/episodes', optionalAuthMiddleware, async (req, res) => {
 	try {
 		const { id } = req.params;
+		const userId = req.user?.userId || null;
+
+		const animeCheck = await pool.query(
+			'SELECT is_protected FROM anime WHERE mal_id = $1',
+			[id]
+		);
+		if (animeCheck.rows.length === 0) {
+			return res.status(404).json({ error: 'Nie znaleziono anime' });
+		}
+		const isProtected = animeCheck.rows[0].is_protected;
+		if (isProtected && !userId) {
+			return res
+				.status(401)
+				.json({ error: 'Musisz być zalogowany, aby obejrzeć te anime' });
+		}
 		const query = `
 			SELECT 
 				*, 

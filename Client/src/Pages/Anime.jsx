@@ -1,4 +1,3 @@
-import Navigation from '../Components/Navigation';
 import axios from 'axios';
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -101,8 +100,6 @@ const Anime = () => {
 
 	return (
 		<div>
-			
-
 			<main className='space-y-5 px-5 py-10 max-w-7xl mx-auto'>
 				<div className='p-5 lg:w-2/3'>
 					<h2 className='font-bold text-2xl mb-3'>Sortowanie</h2>

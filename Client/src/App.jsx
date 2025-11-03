@@ -13,6 +13,7 @@ import Dmca from './Pages/Dmca';
 import PrivacyPolicy from './Pages/PrivacyPolicy';
 import TermsOfService from './Pages/TermsOfService';
 import ContactPage from './Pages/ContactPage';
+import MyList from './Pages/MyList';
 function App() {
 	const [isLoginOpen, setIsLoginOpen] = useState(false);
 	return (
@@ -31,6 +32,7 @@ function App() {
 				<Route path='/privacy-policy' element={<PrivacyPolicy />} />
 				<Route path='/terms-of-service' element={<TermsOfService />} />
 				<Route path='/contact' element={<ContactPage />} />
+				<Route path='/my-list' element={<MyList />} />
 			</Routes>
 			<Toaster
 				position='top-center'

@@ -422,6 +422,64 @@ app.get('/anime/:id/episodes', optionalAuthMiddleware, async (req, res) => {
 		res.status(500).json({ error: 'Wystąpił błąd serwera.' });
 	}
 });
+app.get('/user/anime-list', authenticateToken, async (req, res) => {
+	const userId = req.user.userId;
+	const filter = req.query.filter || 'all';
+	try {
+		const result = await pool.query(
+			`SELECT 
+                lib.id AS library_id, 
+                lib.status, 
+                lib.is_favorite,
+                lib.user_score,
+                lib.updated_at,
+                a.mal_id,     -- Dane z tabeli 'anime'
+                a.title,      -- Dane z tabeli 'anime'
+                a.image_url,  -- Dane z tabeli 'anime'
+                a.episodes    -- Dane z tabeli 'anime'
+            FROM 
+                public.user_anime_library AS lib
+            JOIN 
+                public.anime AS a ON lib.anime_id = a.mal_id
+            WHERE 
+                lib.user_id = $1
+                -- Poprawka na wielkość liter: sprawdzamy $2 po konwersji na małe litery
+                AND (LOWER($2) = 'all' OR LOWER(lib.status) = LOWER($2))
+            ORDER BY 
+                lib.updated_at DESC`,
+			[userId, filter]
+		);
+		res.json(result.rows);
+	} catch (err) {
+		console.error('Błąd podczas pobierania listy anime użytkownika:', err);
+		res.status(500).json({ error: 'Database error' });
+	}
+});
+app.get('/user/anime-list/stats', authenticateToken, async (req, res) => {
+	const userId = req.user.userId;
+
+	try {
+		const query = `
+            SELECT 
+                COUNT(*) AS "all",
+                COUNT(*) FILTER (WHERE status = 'watching') AS "watching",
+                COUNT(*) FILTER (WHERE status = 'completed') AS "completed",
+                COUNT(*) FILTER (WHERE status = 'planned') AS "planned",
+                COUNT(*) FILTER (WHERE status = 'on_hold') AS "on_hold",
+                COUNT(*) FILTER (WHERE status = 'dropped') AS "dropped"
+            FROM 
+                user_anime_library
+            WHERE 
+                user_id = $1;
+        `;
+
+		const result = await pool.query(query, [userId]);
+		res.json(result.rows[0]);
+	} catch (err) {
+		console.error('Błąd podczas pobierania statystyk listy:', err);
+		res.status(500).json({ error: 'Database error' });
+	}
+});
 app.put('/user/anime-status', authenticateToken, async (req, res) => {
 	const { id, status } = req.body;
 	const userId = req.user.userId;

@@ -14,7 +14,11 @@ const Navigation = ({ onLoginClick }) => {
 	const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 	const userMenuButtonRef = useRef();
 	const [isMobileUserMenuOpen, setIsMobileUserMenuOpen] = useState(false);
-	const dropdownRef = useClickOutside(() => setResults([]));
+	const dropdownRef = useClickOutside(() => {
+		setIsDropdownVisible(false);
+	}, []);
+	const [isSearching, setIsSearching] = useState(false);
+	const [isDropdownVisible, setIsDropdownVisible] = useState(false);
 	const userMenuRef = useClickOutside(
 		() => setIsUserMenuOpen(false),
 		[userMenuButtonRef]
@@ -23,8 +27,12 @@ const Navigation = ({ onLoginClick }) => {
 	useEffect(() => {
 		if (searchTerm.trim() === '') {
 			setResults([]);
+			setIsDropdownVisible(false);
 			return;
 		}
+
+		setIsDropdownVisible(true);
+		setIsSearching(true);
 		const delayDebounceFn = setTimeout(async () => {
 			try {
 				const response = await axios.get(
@@ -33,6 +41,9 @@ const Navigation = ({ onLoginClick }) => {
 				setResults(response.data);
 			} catch (err) {
 				console.error(err);
+				setResults([]);
+			} finally {
+				setIsSearching(false);
 			}
 		}, 300);
 
@@ -42,6 +53,7 @@ const Navigation = ({ onLoginClick }) => {
 	const handleResultClick = () => {
 		setSearchTerm('');
 		setResults([]);
+		setIsDropdownVisible(false);
 	};
 
 	const toggleMobileMenu = () => {
@@ -142,9 +154,13 @@ const Navigation = ({ onLoginClick }) => {
 				</button>
 			</nav>
 
-			{results.length > 0 && (
+			{isDropdownVisible && (
 				<div ref={dropdownRef}>
-					<Dropdown results={results} onResultClick={handleResultClick} />
+					<Dropdown
+						results={results}
+						onResultClick={handleResultClick}
+						isSearching={isSearching}
+					/>
 				</div>
 			)}
 			{isUserMenuOpen && (
@@ -193,10 +209,10 @@ const Navigation = ({ onLoginClick }) => {
 								<NavLink to='/profile' className=''>
 									<span className='font-medium'>Profil</span>
 								</NavLink>
-								<NavLink to='/profile' className=''>
+								<NavLink to='/my-list' className=''>
 									<span className='font-medium'>Lista anime</span>
 								</NavLink>
-								<NavLink to='/profile' className=''>
+								<NavLink to='/settings' className=''>
 									<span className='font-medium'>Ustawienia</span>
 								</NavLink>
 							</div>

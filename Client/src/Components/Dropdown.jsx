@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 
-const Dropdown = ({ results, onResultClick }) => {
+const Dropdown = ({ results, onResultClick, isSearching }) => {
 	const navigate = useNavigate();
 	const statusTranslate = {
 		'Finished Airing': 'Zakończony',
@@ -13,7 +13,22 @@ const Dropdown = ({ results, onResultClick }) => {
 		onResultClick();
 		navigate(`/anime/${malId}`);
 	};
-
+	if (isSearching) {
+		return (
+			<div className='absolute top-20 left-1/2 -translate-x-1/2 z-100 border-2 border-cta bg-main w-full md:w-[500px] lg:w-[700px] p-4'>
+				<p className='text-center text-white'>Szukam...</p>
+			</div>
+		);
+	}
+	if (!isSearching && results.length === 0) {
+		return (
+			<div className='absolute top-20 left-1/2 -translate-x-1/2 z-100 border-2 border-cta bg-main w-full md:w-[500px] lg:w-[700px] p-4'>
+				<p className='text-center text-white'>
+					Brak wyników dla podanego tytułu
+				</p>
+			</div>
+		);
+	}
 	return (
 		<div className='absolute space-y-3 top-20 left-1/2 -translate-x-1/2 z-100 border-2 border-cta bg-main w-full md:w-[500px] lg:w-[700px] p-2 max-h-[600px] overflow-y-auto overflow-x-hidden custom-scroll'>
 			{results.map((result) => (

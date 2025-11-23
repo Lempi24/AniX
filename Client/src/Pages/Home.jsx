@@ -3,7 +3,11 @@ import AnimeCardSection from '../Components/AnimeCardSection';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import AnimeCardSectionSkeleton from '../Components/Anime/AnimeCardSectionSkeleton';
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { Navigation } from 'swiper/modules';
+import 'swiper/css';
+import 'swiper/css/navigation';
+import AnimeCardSkeleton from '../Components/Anime/AnimeCardSkeleton';
 const Home = () => {
 	const navigate = useNavigate();
 	const [popularAnime, setPopularAnime] = useState([]);
@@ -68,13 +72,72 @@ const Home = () => {
 		<div>
 			<main className='space-y-5 lg:flex lg:flex-col lg:items-center lg:justify-center'>
 				<ImageCarousel slides={slides} />
+
 				{loading ? (
+					// 2. Blok ładowania - renderuje "szkieletowe" wersje AnimeCardSection
 					<>
-						<AnimeCardSectionSkeleton />
-						<AnimeCardSectionSkeleton />
-						<AnimeCardSectionSkeleton />
+						{/* Szkielet dla "Popularne teraz" */}
+						<section className='p-3 lg:max-w-2/3 w-full'>
+							<div className='h-7 w-48 bg-gray-700 rounded-md animate-pulse mb-3'></div>
+							<Swiper
+								modules={[Navigation]}
+								navigation
+								spaceBetween={15}
+								slidesPerView={'auto'}
+							>
+								{Array.from({ length: 6 }).map((_, i) => (
+									<SwiperSlide
+										key={i}
+										className='!w-[185px] lg:!w-[250px] mt-5'
+									>
+										<AnimeCardSkeleton />
+									</SwiperSlide>
+								))}
+							</Swiper>
+						</section>
+
+						{/* Szkielet dla "Ostatnio dodane" */}
+						<section className='p-3 lg:max-w-2/3 w-full'>
+							<div className='h-7 w-48 bg-gray-700 rounded-md animate-pulse mb-3'></div>
+							<Swiper
+								modules={[Navigation]}
+								navigation
+								spaceBetween={15}
+								slidesPerView={'auto'}
+							>
+								{Array.from({ length: 6 }).map((_, i) => (
+									<SwiperSlide
+										key={i}
+										className='!w-[185px] lg:!w-[250px] mt-5'
+									>
+										<AnimeCardSkeleton />
+									</SwiperSlide>
+								))}
+							</Swiper>
+						</section>
+
+						{/* Szkielet dla "Dla początkujących" */}
+						<section className='p-3 lg:max-w-2/3 w-full'>
+							<div className='h-7 w-48 bg-gray-700 rounded-md animate-pulse mb-3'></div>
+							<Swiper
+								modules={[Navigation]}
+								navigation
+								spaceBetween={15}
+								slidesPerView={'auto'}
+							>
+								{Array.from({ length: 6 }).map((_, i) => (
+									<SwiperSlide
+										key={i}
+										className='!w-[185px] lg:!w-[250px] mt-5'
+									>
+										<AnimeCardSkeleton />
+									</SwiperSlide>
+								))}
+							</Swiper>
+						</section>
 					</>
 				) : (
+					// 3. Blok z prawdziwymi danymi (bez zmian)
 					<>
 						<AnimeCardSection
 							h2='Popularne teraz'

@@ -153,12 +153,15 @@ const AnimeHeader = ({
 		}
 	}, [id, isAuthenticated]);
 	const isSaveScoreActive = fetchedScore !== selectedScore;
+	const heartIcon =
+		'M305 151.1L320 171.8L335 151.1C360 116.5 400.2 96 442.9 96C516.4 96 576 155.6 576 229.1L576 231.7C576 343.9 436.1 474.2 363.1 529.9C350.7 539.3 335.5 544 320 544C304.5 544 289.2 539.4 276.9 529.9C203.9 474.2 64 343.9 64 231.7L64 229.1C64 155.6 123.6 96 197.1 96C239.8 96 280 116.5 305 151.1z';
 	const starIcon =
 		'M341.5 45.1C337.4 37.1 329.1 32 320.1 32C311.1 32 302.8 37.1 298.7 45.1L225.1 189.3L65.2 214.7C56.3 216.1 48.9 222.4 46.1 231C43.3 239.6 45.6 249 51.9 255.4L166.3 369.9L141.1 529.8C139.7 538.7 143.4 547.7 150.7 553C158 558.3 167.6 559.1 175.7 555L320.1 481.6L464.4 555C472.4 559.1 482.1 558.3 489.4 553C496.7 547.7 500.4 538.8 499 529.8L473.7 369.9L588.1 255.4C594.5 249 596.7 239.6 593.9 231C591.1 222.4 583.8 216.1 574.8 214.7L415 189.3L341.5 45.1z';
 	const playIcon =
 		'M187.2 100.9C174.8 94.1 159.8 94.4 147.6 101.6C135.4 108.8 128 121.9 128 136L128 504C128 518.1 135.5 531.2 147.6 538.4C159.7 545.6 174.8 545.9 187.2 539.1L523.2 355.1C536 348.1 544 334.6 544 320C544 305.4 536 291.9 523.2 284.9L187.2 100.9z';
 	return (
 		<div className='flex flex-col lg:flex-row w-full items-center lg:items-start gap-5 lg:gap-10'>
+			{/* Obrazek z trailerem */}
 			<div className='relative w-[250px] shrink-0'>
 				<img
 					onClick={handleTrailerState}
@@ -182,11 +185,25 @@ const AnimeHeader = ({
 				</div>
 			</div>
 
+			{/* Prawa część */}
 			<div className='flex flex-col gap-5 w-full'>
+				{/* Tytuł */}
 				<div className='text-center lg:text-left space-y-2'>
 					<h1 className='font-bold text-3xl lg:text-4xl'>{title}</h1>
 					<p className='text-text-secondary'>{title_japanese}</p>
 				</div>
+
+				{/* Główne CTA */}
+				<div className='w-full'>
+					<button
+						onClick={watchNow}
+						className='bg-cta text-main font-bold text-lg py-3 px-6 rounded-xl w-full lg:w-fit cursor-pointer'
+					>
+						Oglądaj teraz
+					</button>
+				</div>
+
+				{/* Statystyki */}
 				<div className='flex items-center gap-5 flex-wrap justify-center lg:justify-start'>
 					<div className='text-center'>
 						<p className='text-text-accent uppercase text-sm'>Ocena</p>
@@ -216,80 +233,60 @@ const AnimeHeader = ({
 						<p className='font-bold text-lg'>{year || 'N/A'}</p>
 					</div>
 				</div>
-				{isAuthenticated && (
-					<div className='w-full space-y-5'>
-						<div className='border-2 border-cta rounded-md p-5 w-full mt-5 space-y-5 lg:mt-0'>
-							<p className='border-b-2 border-cta text-xl pb-3'>Twoja ocena</p>
-							<div className='flex items-center gap-2 mt-5'>
-								{stars.map((num) => (
-									<div>
-										<svg
-											xmlns='http://www.w3.org/2000/svg'
-											viewBox='0 0 640 640'
-											onMouseEnter={() => setHovered(num)}
-											onMouseLeave={() => setHovered(0)}
-											onClick={() => setSelectedScore(num)}
-											className={` stroke-star stroke-30 w-[15px] lg:w-[30px] transition-colors cursor-pointer ${
-												hovered >= num || (!hovered && selectedScore >= num)
-													? 'fill-star'
-													: 'fill-transparent'
-											}`}
-										>
-											<path d={starIcon} />
-										</svg>
-									</div>
-								))}
-								<span className='ml-1 lg:ml-10 text-star text-xl'>
-									{selectedScore
-										? `${selectedScore}/${stars.length}`
-										: hovered
-										? `${hovered}/${stars.length}`
-										: '-'}
-								</span>
-							</div>
-							<div className='flex gap-3'>
-								<button
-									onClick={() => handleScoreChange()}
-									className={`w-full p-2 rounded-xl cursor-pointer transition-colors duration-300 ${
-										isSaveScoreActive
-											? 'bg-cta'
-											: 'border-2 border-secondary text-secondary pointer-events-none'
-									}`}
-								>
-									Zapisz ocenę
-								</button>
 
-								<button
-									onClick={() => setSelectedScore(0)}
-									className='border-2 border-cta w-full p-2 rounded-xl cursor-pointer'
-								>
-									Wyczyść
-								</button>
-							</div>
-						</div>
-					</div>
-				)}
-				<div className='flex flex-col lg:flex-row items-center gap-3'>
+				{/* Pozostałe przyciski */}
+				<div className='flex flex-wrap gap-4 justify-center lg:justify-start'>
+					{/* Ulubione */}
 					<button
-						onClick={watchNow}
-						className='bg-cta w-full p-2 rounded-xl cursor-pointer'
+						onClick={handleFavoriteChange}
+						className={`border-2 rounded-xl p-2 flex items-center justify-center transition-colors duration-300
+          ${
+						isAuthenticated
+							? 'border-cta hover:bg-cta/20 cursor-pointer'
+							: 'border-secondary text-secondary pointer-events-none'
+					}
+        `}
+						disabled={isFavoriteLoading}
 					>
-						Oglądaj teraz
+						<span className={isFavoriteLoading ? 'invisible' : ''}>
+							<svg
+								strokeWidth={50}
+								xmlns='http://www.w3.org/2000/svg'
+								viewBox='0 0 640 640'
+								className={`w-[25px] transition-transform duration-300
+              ${
+								userSelectedAnimeData.is_favorite
+									? 'fill-cta animate-heart-pop'
+									: 'fill-transparent stroke-cta'
+							}
+            `}
+							>
+								<path d={heartIcon} />
+							</svg>
+						</span>
+						{isFavoriteLoading && (
+							<div className='absolute flex items-center justify-center'>
+								<div className='w-6 h-6 border-4 border-cta border-t-transparent rounded-full animate-spin'></div>
+							</div>
+						)}
 					</button>
-					<div className='relative w-full'>
+
+					{/* Dodaj do listy */}
+					<div className='relative'>
 						<button
 							onClick={() => setIsDropDownOpen((prev) => !prev)}
-							className={`w-full border-2 rounded-xl p-2 transition-colors duration-300 flex items-center  justify-center ${
-								isAuthenticated
-									? `border-cta hover:bg-cta/20 ${currentStatus?.color} cursor-pointer`
-									: 'border-secondary text-secondary pointer-events-none'
-							}`}
+							className={`border-2 rounded-xl p-2 transition-colors duration-300 flex items-center justify-center min-w-[175px]
+            ${
+							isAuthenticated
+								? `border-cta hover:bg-cta/20 ${currentStatus?.color} cursor-pointer`
+								: 'border-secondary text-secondary pointer-events-none'
+						}
+          `}
 							disabled={isStatusLoading}
 						>
 							<span className={isStatusLoading ? 'invisible' : ''}>
 								{currentStatus?.label || 'Dodaj do listy'}
 							</span>
-
 							{isStatusLoading && (
 								<div className='absolute flex items-center justify-center inset-0'>
 									<div className='w-6 h-6 border-4 border-cta border-t-transparent rounded-full animate-spin'></div>
@@ -322,27 +319,61 @@ const AnimeHeader = ({
 							</div>
 						)}
 					</div>
-					<button
-						onClick={handleFavoriteChange}
-						className={`w-full border-2 rounded-xl p-2 transition-colors duration-300 flex items-center justify-center ${
-							userSelectedAnimeData.is_favorite ? 'bg-cta' : ''
-						} ${
-							isAuthenticated
-								? 'border-cta hover:bg-cta/20 cursor-pointer'
-								: 'border-secondary text-secondary pointer-events-none'
-						}`}
-						disabled={isFavoriteLoading}
-					>
-						<span className={isFavoriteLoading ? 'invisible' : ''}>
-							Ulubione
-						</span>
-						{isFavoriteLoading && (
-							<div className='absolute flex items-center justify-center'>
-								<div className='w-6 h-6 border-4 border-cta border-t-transparent rounded-full animate-spin'></div>
-							</div>
-						)}
-					</button>
 				</div>
+
+				{/* Ocena użytkownika */}
+				{isAuthenticated && (
+					<div className='w-full space-y-5'>
+						<div className='border-2 border-cta rounded-md p-5 w-full mt-5 space-y-5 lg:mt-0'>
+							<p className='border-b-2 border-cta text-xl pb-3'>Twoja ocena</p>
+							<div className='flex items-center gap-2 mt-5'>
+								{stars.map((num) => (
+									<div key={num}>
+										<svg
+											xmlns='http://www.w3.org/2000/svg'
+											viewBox='0 0 640 640'
+											onMouseEnter={() => setHovered(num)}
+											onMouseLeave={() => setHovered(0)}
+											onClick={() => setSelectedScore(num)}
+											className={`stroke-star stroke-30 w-[15px] lg:w-[30px] transition-colors cursor-pointer ${
+												hovered >= num || (!hovered && selectedScore >= num)
+													? 'fill-star'
+													: 'fill-transparent'
+											}`}
+										>
+											<path d={starIcon} />
+										</svg>
+									</div>
+								))}
+								<span className='ml-1 lg:ml-10 text-star text-xl'>
+									{selectedScore
+										? `${selectedScore}/${stars.length}`
+										: hovered
+										? `${hovered}/${stars.length}`
+										: '-'}
+								</span>
+							</div>
+							<div className='flex gap-3'>
+								<button
+									onClick={() => handleScoreChange()}
+									className={`w-full p-2 rounded-xl cursor-pointer transition-colors duration-300 ${
+										isSaveScoreActive
+											? 'bg-cta'
+											: 'border-2 border-secondary text-secondary pointer-events-none'
+									}`}
+								>
+									Zapisz ocenę
+								</button>
+								<button
+									onClick={() => setSelectedScore(0)}
+									className='border-2 border-cta w-full p-2 rounded-xl cursor-pointer'
+								>
+									Wyczyść
+								</button>
+							</div>
+						</div>
+					</div>
+				)}
 			</div>
 		</div>
 	);

@@ -431,19 +431,20 @@ app.get('/user/anime-list', authenticateToken, async (req, res) => {
                 lib.id AS library_id, 
                 lib.status, 
                 lib.is_favorite,
-                lib.user_score,
                 lib.updated_at,
                 a.mal_id,     -- Dane z tabeli 'anime'
                 a.title,      -- Dane z tabeli 'anime'
                 a.image_url,  -- Dane z tabeli 'anime'
-                a.episodes    -- Dane z tabeli 'anime'
+                a.episodes, -- Dane z tabeli 'anime'
+				a.score    -- Dane z tabeli 'anime'
             FROM 
                 public.user_anime_library AS lib
             JOIN 
                 public.anime AS a ON lib.anime_id = a.mal_id
             WHERE 
                 lib.user_id = $1
-                -- Poprawka na wielkość liter: sprawdzamy $2 po konwersji na małe litery
+              	AND lib.status IS NOT NULL
+                AND lib.status <> ''
                 AND (LOWER($2) = 'all' OR LOWER(lib.status) = LOWER($2))
             ORDER BY 
                 lib.updated_at DESC`,
@@ -470,7 +471,9 @@ app.get('/user/anime-list/stats', authenticateToken, async (req, res) => {
             FROM 
                 user_anime_library
             WHERE 
-                user_id = $1;
+                user_id = $1
+				AND status IS NOT NULL
+                AND status <> ''
         `;
 
 		const result = await pool.query(query, [userId]);

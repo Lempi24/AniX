@@ -96,7 +96,7 @@ const AnimeHeader = ({
 	};
 	const handleFavoriteChange = async () => {
 		if (!userSelectedAnimeData.status) {
-			toast.error('Ustaw status, aby dodać do ulubionych');
+			toast.error('Dodaj do listy, aby dodać do ulubionych');
 			return;
 		}
 		setIsFavoriteLoading(true);

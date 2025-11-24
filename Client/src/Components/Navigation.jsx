@@ -1,4 +1,4 @@
-import { useNavigate, NavLink } from 'react-router-dom';
+import { useNavigate, NavLink, useLocation } from 'react-router-dom';
 import { useState, useEffect, useRef } from 'react';
 import Dropdown from './Dropdown';
 import axios from 'axios';
@@ -8,6 +8,7 @@ import useClickOutside from '../hooks/useClickOutside';
 const Navigation = ({ onLoginClick }) => {
 	const { isAuthenticated, logout, user, loading } = useAuth();
 	const navigate = useNavigate();
+	const location = useLocation();
 	const [searchTerm, setSearchTerm] = useState('');
 	const [results, setResults] = useState([]);
 	const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -23,7 +24,10 @@ const Navigation = ({ onLoginClick }) => {
 		() => setIsUserMenuOpen(false),
 		[userMenuButtonRef]
 	);
-
+	useEffect(() => {
+		setIsUserMenuOpen(false);
+		setIsMobileMenuOpen(false);
+	}, [location.pathname]);
 	useEffect(() => {
 		if (searchTerm.trim() === '') {
 			setResults([]);

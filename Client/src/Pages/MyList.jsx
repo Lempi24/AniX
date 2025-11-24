@@ -67,7 +67,7 @@ const MyList = () => {
 	const handleAnimeClick = (anime) => {
 		navigate(`/anime/${anime.mal_id}`);
 	};
-	console.log(stats);
+	console.log(allAnime);
 	return (
 		<div>
 			<main className='space-y-5 px-5 py-10 max-w-7xl mx-auto'>
@@ -116,6 +116,7 @@ const MyList = () => {
 										title={anime.title}
 										imageUrl={anime.image_url}
 										episodes={anime.episodes}
+										score={anime.score}
 									/>
 								</div>
 						  ))}

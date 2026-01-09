@@ -48,24 +48,24 @@ const Home = () => {
 	};
 	const slides = [
 		{
-			src: 'https://cdn.myanimelist.net/images/anime/1959/151055l.jpg',
-			title: 'Boku no Hero Academia: Final Season',
-			description: 'Epicki finał serii! Nowe odcinki już dostępne!',
-			buttonAction: () => handleAnimeClick(60098),
+			src: 'https://cdn.myanimelist.net/images/anime/1659/154920l.jpg',
+			title: 'Jujutsu Kaisen: Culling Game Arc',
+			description: 'Kolejny sezon cierpień młodego Yuuji Itadori!',
+			buttonAction: () => handleAnimeClick(57658),
 		},
 		{
-			src: 'https://cdn.myanimelist.net/images/anime/1682/150432l.jpg',
-			title: 'Gachiakuta',
+			src: 'https://cdn.myanimelist.net/images/anime/1508/152472l.jpg',
+			title: 'Enen no Shouboutai: San no Shou Part 2',
 			description:
-				'Śmieci wciąż nieposprzątane. Pierwszy sezon Gachiakuta trwa w najlepsze!',
-			buttonAction: () => handleAnimeClick(59062),
+				'Ostatni sezon popularnej serii o strażakach walczących z nadprzyrodzonymi pożarami.',
+			buttonAction: () => handleAnimeClick(59229),
 		},
 		{
-			src: 'https://cdn.myanimelist.net/images/anime/1364/151767l.jpg',
-			title: 'Sanda',
+			src: 'https://cdn.myanimelist.net/images/anime/1592/154049l.jpg',
+			title: 'Vigilante: Boku no Hero Academia Illegals 2nd Season',
 			description:
-				'Anime studia Science SARU, w niedalekiej przyszłości nastolatek Sanda odkrywa, że jest potomkiem Świętego Mikołaja i musi ratować przyjaciółkę przed zniknięciem.',
-			buttonAction: () => handleAnimeClick(59267),
+				'Smutni po finale MHA? Osuszczie swoje łzy z drugim sezonem Vigilante!',
+			buttonAction: () => handleAnimeClick(61942),
 		},
 	];
 	return (
